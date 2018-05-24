@@ -1,0 +1,17 @@
+description = "Lookup installed OCaml modules"
+version = "%%VERSION%%"
+requires = ""
+archive(byte) = "omod.cma"
+archive(native) = "omod.cmxa"
+plugin(byte) = "omod.cma"
+plugin(native) = "omod.cmxs"
+
+package "support" (
+version = "%%VERSION%%"
+requires = "unix compiler-libs.common"
+description = "Omod support library"
+archive(byte) = "omod_support.cma"
+archive(native) = "omod_support.cmxa"
+plugin(byte) = "omod_support.cma"
+plugin(native) = "omod_support.cmxs"
+)

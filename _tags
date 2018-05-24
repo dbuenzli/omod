@@ -1,0 +1,7 @@
+true : bin_annot, safe_string, package(bytes)
+
+<src> : include
+<src/omod_bin*> : package(cmdliner compiler-libs.common unix)
+<src/omod_support*> : package(compiler-libs.common)
+<src/omod_ocamlc*> : package(compiler-libs.common)
+<test> : include
