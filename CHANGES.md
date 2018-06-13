@@ -1,4 +1,4 @@
-vX.Y.Z YYYY-MM-DD Location
---------------------------
+v0.0.1 2018-06-12 Zagreb
+------------------------
 
-First release. 
+First release.
