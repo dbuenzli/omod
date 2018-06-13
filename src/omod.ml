@@ -276,7 +276,7 @@ let pp_code = Fmt.tty_str ~mode:"01" (* bold *)
 (* Toplevel loaders *)
 
 let log fmt = Format.printf (fmt ^^ "@.")
-let log_err fmt = Format.eprintf ("[%a] " ^^ fmt ^^ "@.") pp_red  "ERROR"
+let log_err fmt = Format.eprintf ("[%a] @[" ^^ fmt ^^ "@]@.") pp_red  "ERROR"
 let log_error = function Ok v -> v | Error e -> log_err "%s" e
 
 module Tinc = struct
@@ -385,7 +385,7 @@ let load_objs ~assume ~silent ~force ~incs ~init objs =
 
 (* Load sequence requests *)
 
-let omod_load_seqs ~silent m =
+let omod_load_seqs ~silent mods =
   let rec parse_loads s =
     let rec loop acc cur = function
     | [] -> Ok (List.rev ((List.rev cur) :: acc))
@@ -401,7 +401,7 @@ let omod_load_seqs ~silent m =
   let add_if c arg acc = if c then arg :: acc else acc in
   let cmd =
     "omod" :: "load" :: "--force" ::
-    (add_if (Top.is_nat ()) "--nat" @@ add_if silent "--quiet" @@ [m])
+    (add_if (Top.is_nat ()) "--nat" @@ add_if silent "--quiet" @@ mods)
   in
   match Cmd.read cmd with Error (_, e) -> Error e | Ok v -> parse_loads v
 
@@ -427,8 +427,10 @@ let ask_which_seq ppf max =
 
 let _load
     ~assume ?(batch = not !Sys.interactive) ?(silent = false) ?(force = false)
-    ?(incs = true) ?(init = true) ?dir m =
-  match omod_load_seqs ~silent m with
+    ?(incs = true) ?(init = true) ?dir mods
+  =
+  if mods = [] then true else
+  match omod_load_seqs ~silent mods with
   | Error _ as e -> log_error e; false
   | Ok loads ->
       match loads with
@@ -436,7 +438,8 @@ let _load
       | [objs] -> load_objs ~assume ~silent ~force ~incs ~init objs
       | alts ->
           let log = if batch then log_err else log in
-          log "@[<v>%s has alternative load sequences:@,@[<v>%a@]@]" m
+          log "@[<v>%a has alternative load sequences:@,@[<v>%a@]@]"
+            Fmt.(list string) mods
             pp_load_sequences alts;
           if batch then false else
           match ask_which_seq Format.std_formatter (List.length alts - 1) with
@@ -444,8 +447,15 @@ let _load
           | Ok n ->
               load_objs ~assume ~silent ~force ~incs ~init (List.nth alts n)
 
-let load = _load ~assume:false
-let assume_load = _load ~assume:true
+let loads = _load ~assume:false
+let assume_loads = _load ~assume:true
+
+let load ?batch ?silent ?force ?incs ?init ?dir m =
+  _load ~assume:false ?batch ?silent ?force ?incs ?init ?dir [m]
+
+let assume_load ?batch ?silent ?force ?incs ?init ?dir m =
+  _load ~assume:true ?batch ?silent ?force ?incs ?init ?dir [m]
+
 let assume_inc = Tinc.assume
 let assume_obj = Tobj.assume
 

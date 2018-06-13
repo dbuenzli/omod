@@ -60,6 +60,9 @@ module Log : sig
 
   val err : t
   (** [err] is like {!std} but formats on {!Format.err_formatter}. *)
+
+  val time : t -> string -> (unit -> 'a) -> 'a
+  (** [time l label f] logs the processor time of [f ()] on [l]. *)
 end
 
 (** Compilation objects *)
@@ -192,6 +195,9 @@ module Cobj : sig
     (** [of_cobjs ~init cobjs] is an index made of [init] (defaults to
         {!empty}) and [cobjs]. *)
 
+    val cobjs : t -> cobj list
+    (** [to_cobjs i] are the compilation objects of [i]. *)
+
     val cobjs_by_name : t -> cobj list String.Map.t
     (** [cobjs_by_name i] are the module names of [i] and the compilation
         objects they map to. *)
@@ -219,6 +225,22 @@ module Cobj : sig
     val cobjs_for_dep : dep -> t -> cobj list
     (** [cobjs_for_iface_digest dep i] are the compilation objects of [i]
         which satisfy dependency [dep]. *)
+
+    val cobjs_for_dep_res :
+      variants:String.Set.t -> sat:(cobj -> bool) -> kind:kind -> dep ->
+      t -> cobj list
+    (** [cobjs_for_dep_res ~variants ~sat ~kind dep i] resolves [dep]
+        in [i] to a [sat] satisfying compilation object of kind [kind]
+        with the following twists:
+        {ul
+        {- If no [kind] can be found but a [Cmi] exists the latter is
+           returned, assuming an mli-only module.}
+        {- If an object is available both as a standalone compilation
+           object and in an archive, only resolutions that mention the
+           archive are returned.}
+        {- If an object is available in multiple variants and [variants]
+           is not {!String.Set.empty} then variants that do not
+           belong to [variants] are dropped.}} *)
   end
 
   type res = t String.Map.t
@@ -227,20 +249,12 @@ module Cobj : sig
 
   val resolve_deps :
     variants:String.Set.t -> sat:(t -> bool) -> kind:kind -> Index.t ->
-    roots:dep list -> (res list, string) result
+    root_alts:t list list -> (res list, string) result
   (** [resolve_deps ~variants ~sat ~kind i roots] is a list of resolutions that
-      recursively resolve dependencies [roots] to compilation objects
-      of kind [kind] and satisfying [sat] with the following twists
-      whenever objets are resolved:
-      {ul
-      {- If no [kind] can be found but a [Cmi] exists the latter will be
-         returned, assuming an mli-only module.}
-      {- If an object is available both as a standalone compilation
-         object and in an archive, only resolutions that mention the
-         archive are returned.}
-      {- If an object is available in multiple variants and [variants]
-         is not {!String.Set.empty} then variants that do not
-         belong to [variants] are dropped.}} *)
+      recursively resolve the dependencies of the alternative root
+      object roots [root_alts] to compilation objects
+      of kind [kind] and satisfying [sat] using the twists of
+      {!Index.cobjs_for_dep_res}. *)
 
   val fold_res : res -> (t -> 'a -> 'a) -> 'a -> 'a
   (** [fold_res res f acc] folds [f] with [acc] over the partial
@@ -250,9 +264,10 @@ module Cobj : sig
 
   val loads :
     variants:String.Set.t ->
-    sat:(t -> bool) -> kind:kind -> Index.t -> roots:dep list ->
+    sat:(t -> bool) -> kind:kind -> Index.t -> root_alts:t list list ->
     (Omod.fpath list list, string) result
-  (** [loads ~sat ~kind i roots] resolves [roots] to alternative load
+  (** [loads ~sat ~kind i root_alts] resolves the alternative root
+      objects roots [root_alts] to alternative load
       sequences of object paths of that have objects of kind [kind] or
       [Cmi]s (mli-only modules). All the objects involved in the load
       sequence satisfy [sat]. *)

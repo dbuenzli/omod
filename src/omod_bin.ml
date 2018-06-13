@@ -27,19 +27,6 @@ let did_you_mean ?(pre = "Unknown") ?(post = "") ~kind (n, hints) =
 
 (* Lookups *)
 
-let has_kind kinds = match kinds with
-| [] -> fun _ -> true
-| ks -> fun o -> List.mem (Cobj.kind o) kinds
-
-let has_pkg pkgs = match String.Set.is_empty pkgs with
-| true -> fun _ -> true
-| false -> fun o -> String.Set.mem (fst (Cobj.pkg_id o)) pkgs
-
-let has_variant variants = match String.Set.is_empty variants with
-| true -> fun _ -> true
-| false -> fun o ->
-  (Cobj.variant o) = "" || String.Set.mem (Cobj.variant o) variants
-
 let kind_names_exist ?post ~kind dom names =
   let rec loop miss = function
   | n :: ns when String.Map.mem n dom -> loop miss ns
@@ -75,52 +62,63 @@ let mod_names_exist idx pkgs names =
   kind_names_exist
     ~kind:"module name" ~post (Cobj.Index.cobjs_by_name idx) names
 
+let err_no_object = Error "No such object found"
 let err_not_found idx pkgs mod_name =
   let pkgs = String.Set.elements pkgs in
   match pkg_names_exist idx pkgs with
   | Error _ as e -> e
   | Ok () ->
       match mod_names_exist idx pkgs [mod_name] with
-      | Error _ as e -> e | Ok _ -> assert false
-
-let find_cobjs_by_spec idx pkgs mod_name kinds =
-  let pkgs, name, variants = match Cobj.spec_of_string mod_name with
-  | None, n, vs -> String.Set.of_list pkgs, n, String.Set.of_list vs
-  | Some p, n, vs -> String.Set.of_list [p], n, String.Set.of_list vs
-  in
-  let has_kind = has_kind kinds in
-  let has_pkg = has_pkg pkgs in
-  let has_variant = has_variant variants in
-  match Cobj.Index.cobjs_for_mod_name name idx with
-  | [] -> err_not_found idx pkgs name
-  | objs ->
-      match List.filter has_pkg objs with
-      | [] -> err_not_found idx pkgs name
-      | objs ->
-          match List.filter has_variant objs with
-          | [] -> Ok (List.filter has_kind objs)
-          | objs -> Ok (List.filter has_kind objs)
-
-let find_cobjs_by_specs idx pkgs mod_names kinds =
-  let rec loop acc = function
-  | [] -> Ok acc
-  | n :: ns ->
-      match find_cobjs_by_spec idx pkgs n kinds with
       | Error _ as e -> e
-      | Ok cobjs -> loop (List.rev_append cobjs acc) ns
+      | Ok _ -> err_no_object
+
+let cobjs_query idx ~pkgs mod_spec kinds =
+  let match_kind = match kinds with
+  | [] -> fun _ -> true
+  | ks -> fun o -> List.mem (Cobj.kind o) kinds
   in
-  if mod_names <> [] then loop [] mod_names else
-  match pkg_names_exist idx pkgs with
-  | Error _ as e -> e
-  | Ok () ->
-      let has_kind = has_kind kinds in
-      let has_pkg = has_pkg (String.Set.of_list pkgs) in
-      let add_cobjs k cobjs acc =
-        let cobjs = List.filter has_kind cobjs in
-        let cobjs = List.filter has_pkg cobjs in
-        List.rev_append cobjs acc
+  let match_pkg pkgs = match String.Set.is_empty pkgs with
+  | true -> fun _ -> true
+  | false -> fun o -> String.Set.mem (fst (Cobj.pkg_id o)) pkgs
+  in
+  match mod_spec with
+  | None ->
+      let match_pkg = match_pkg (String.Set.of_list pkgs) in
+      let sat o = match_kind o && match_pkg o in
+      begin match List.filter sat (Cobj.Index.cobjs idx) with
+      | [] -> err_no_object
+      | cobjs -> Ok cobjs
+      end
+  | Some mod_spec ->
+      let pkgs, name, variants = match Cobj.spec_of_string mod_spec with
+      | None, n, vs -> String.Set.of_list pkgs, n, String.Set.of_list vs
+      | Some p, n, vs -> String.Set.of_list [p], n, String.Set.of_list vs
       in
-      Ok (String.Map.fold add_cobjs (Cobj.Index.cobjs_by_name idx) [])
+      let match_pkg = match_pkg pkgs in
+      let match_variant = match String.Set.is_empty variants with
+      | true -> fun _ -> true
+      | false -> fun o ->
+        (Cobj.variant o) = "" || String.Set.mem (Cobj.variant o) variants
+      in
+      let sat o = match_kind o && match_pkg o && match_variant o in
+      match List.filter sat (Cobj.Index.cobjs_for_mod_name name idx) with
+      | [] -> err_not_found idx pkgs name
+      | objs -> Ok objs
+
+let cobjs_queries idx pkgs mod_specs kinds = match pkg_names_exist idx pkgs with
+| Error _ as e -> e
+| Ok () ->
+    match mod_specs with
+    | [] -> cobjs_query idx ~pkgs None kinds
+    | specs ->
+        let rec loop acc = function
+        | [] -> Ok acc
+        | spec :: specs ->
+            match cobjs_query idx pkgs (Some spec) kinds with
+            | Error _ as e -> e
+            | Ok cobjs -> loop (List.rev_append cobjs acc) specs
+        in
+        loop [] mod_specs
 
 let get_cache ?(err = Log.err) ?(note = Log.err) conf ~quiet ~force ~trust =
   let note = if quiet then Log.nil else note in
@@ -160,8 +158,8 @@ let pp_cobj = function
 let cobj_cmd (conf, cache) out_fmt pkg_names mod_names cobj_kinds =
   handle_cache_error cache @@ fun cache ->
   let idx = Pkg.db_to_cobj_index (Cache.pkgs cache) in
-  handle_name_error (find_cobjs_by_specs idx pkg_names mod_names cobj_kinds) @@
-  fun cobjs ->
+  handle_name_error (cobjs_queries idx pkg_names mod_names cobj_kinds)
+  @@ fun cobjs ->
   let cobjs = List.sort Cobj.ui_compare cobjs in
   Format.printf "@[<v>%a@]@." (Fmt.list (pp_cobj out_fmt)) cobjs; 0
 
@@ -180,8 +178,8 @@ let pp_cmi = function
 let list_cmd (conf, cache) out_fmt pkg_names mod_names =
   handle_cache_error cache @@ fun cache ->
   let idx = Pkg.db_to_cobj_index (Cache.pkgs cache) in
-  handle_name_error (find_cobjs_by_specs idx pkg_names mod_names [Cobj.Cmi]) @@
-  fun cobjs ->
+  handle_name_error (cobjs_queries idx pkg_names mod_names [Cobj.Cmi])
+  @@ fun cobjs ->
   let cobjs = List.sort Cobj.ui_compare cobjs in
   Format.printf "@[<v>%a@]@." (Fmt.list (pp_cmi out_fmt)) cobjs; 0
 
@@ -200,21 +198,54 @@ let is_profile_obj o = (* m.p.ext files (mainly in stdlib) *)
           | exception Not_found -> false
           | j -> first_sep < j && (i - j) = 2 && p.[j + 1] = 'p'
 
-let load idx nat mod_name =
-  let kinds = Cobj.Cmi :: if nat then [Cobj.Cmx] else [Cobj.Cmo] in
-  match find_cobjs_by_spec idx [] mod_name kinds with
-  | Error _ as e -> e
-  | Ok _ ->
-      let _, m, variants = Cobj.spec_of_string mod_name in
-      let variants = String.Set.of_list variants in
-      let kind = if nat then Cobj.Cmx else Cobj.Cmo in
-      let sat o = not (is_vmthreads_variant o) && not (is_profile_obj o) in
-      Cobj.loads ~variants ~sat ~kind idx ~roots:[(m, None)]
+let ignore_obj o =
+  (* This avoid many multiple load sequence and is unlikely to be
+     desired by end users. Maybe we could have a cli flag to disable it. *)
+  is_vmthreads_variant o || is_profile_obj o
 
-let load_cmd (conf, cache) nat mod_name =
+let rec product = function
+| [] -> [[]]
+| l :: ll ->
+    let tails = product ll in
+    let add_tails v = List.map (fun tail -> v :: tail) tails in
+    List.concat (List.map add_tails l)
+
+let rec load_roots idx ~sat ~kind mod_specs =
+  let rec loop vacc roots = function
+  | [] -> Ok (vacc, product roots)
+  | spec :: specs ->
+      let pkg, name, variants = Cobj.spec_of_string spec in
+      let variants = String.Set.of_list variants in
+      let match_pkg = match pkg with
+      | None -> fun _ -> true
+      | Some p -> fun o -> String.equal p (fst (Cobj.pkg_id o))
+      in
+      let sat o = match_pkg o && sat o in
+      let dep = name, None in
+      let cobjs = Cobj.Index.cobjs_for_dep_res ~variants ~sat ~kind dep idx in
+      if cobjs <> []
+      then loop  (String.Set.union vacc variants) (cobjs :: roots) specs
+      else
+      let pkg = match pkg with
+      | None -> String.Set.empty
+      | Some pkg -> String.Set.singleton pkg
+      in
+      err_not_found idx pkg name
+  in
+  loop String.Set.empty [] mod_specs
+
+let load idx nat mod_specs =
+  let sat o = not (ignore_obj o) in
+  let kind = if nat then Cobj.Cmx else Cobj.Cmo in
+  match load_roots idx ~sat ~kind mod_specs with
+  | Error _ as e -> e
+  | Ok (variants, root_alts) ->
+      Cobj.loads ~variants ~sat ~kind idx ~root_alts
+
+let load_cmd (conf, cache) nat mod_names =
   handle_cache_error cache @@ fun cache ->
   let idx = Pkg.db_to_cobj_index (Cache.pkgs cache) in
-  match load idx nat mod_name with
+  match load idx nat mod_names with
   | Error e -> Format.printf "@[<v>error:@,%s@,@]" e; 0
   | Ok loads ->
       let pp_load = match nat with
@@ -235,9 +266,9 @@ let load_cmd (conf, cache) nat mod_name =
 let check_cmd (conf, cache) pkg_names nat =
   handle_cache_error cache @@ fun cache ->
   let idx = Pkg.db_to_cobj_index (Cache.pkgs cache) in
-  handle_name_error (find_cobjs_by_specs idx pkg_names [] [Cobj.Cmi]) @@
+  handle_name_error (cobjs_queries idx pkg_names [] [Cobj.Cmi]) @@
   fun cobjs ->
-  let try_load acc cobj = match load idx nat (Cobj.name cobj) with
+  let try_load acc cobj = match load idx nat [(Cobj.name cobj)] with
   | Error e -> Format.printf "@[%s: %s@]@." (Cobj.name cobj) e; 3
   | Ok _ -> acc
   in
@@ -344,27 +375,24 @@ let pkgs_opt =
   let doc = "Package to consider (repetable)." in
   Arg.(value & opt_all string [] & info ["p"; "pkg"] ~doc ~docv:"PKG")
 
-let mod_docv = "[PKG.]MOD(@VARIANT)*"
 let mod_names =
-  let doc = "Module names to consider (repeatable)." in
-  Arg.(value & pos_all string [] & info [] ~doc ~docv:mod_docv)
+  let doc =
+    "Module name to consider (repeatable). Can be of the form
+     $(b,[PKG.]MOD\\(@VARIANT\\)*)."
+  in
+  Arg.(pos_all string [] & info [] ~doc ~docv:"MOD")
 
-let mod_name =
-  let doc = "Module name" in
-  Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:mod_docv)
+let non_empty_mod_names = Arg.non_empty mod_names
+let mod_names = Arg.value mod_names
+
 
 let cobj_kinds =
-  let doc = "Compilation object kind to consider (repeatable)" in
-  let kind =
-    let parse s = match Cobj.kind_of_string s with
-    | Some k -> Ok k
-    | None ->
-        Error (`Msg (strf "%S: could not parse compilation object kind" s))
-    in
-    let pp ppf k = Fmt.string ppf (Cobj.kind_to_string k) in
-    Arg.conv ~docv:"KIND" (parse, pp)
+  let enum = ["cmi", Cobj.Cmi; "cmo", Cobj.Cmo; "cmx", Cobj.Cmx] in
+  let kind = Arg.enum enum in
+  let doc = strf "Compilation object kind to consider (repeatable).
+                  $(docv) must be %s." (Arg.doc_alts_enum enum)
   in
-  Arg.(value & opt_all kind [] & info ["k"; "kind"] ~doc)
+  Arg.(value & opt_all kind [] & info ["k"; "kind"] ~doc ~docv:"KIND")
 
 let nat =
   let doc = "cmx based load sequence for ocamlnat." in
@@ -456,11 +484,12 @@ let load_cmd =
   let man_xrefs = [ `Main ] in
   let man = [
     `S Manpage.s_description;
-    `P "$(tname) shows the load sequence of a module. This command
-        does not exit with 1 in case the module is unknown it reports
-        the error on stdout in machine readable format."; ]
+    `P "$(tname) shows the load sequence for a non-empty list of modules.
+        If variants are specified for a module they apply to all modules.
+        This command does not exit with 1 in case the module is unknown it
+        reports the error on stdout in machine readable format."; ]
   in
-  Term.(const load_cmd $ cache $ nat $ mod_name),
+  Term.(const load_cmd $ cache $ nat $ non_empty_mod_names),
   Term.info "load" ~doc ~exits ~man ~man_xrefs
 
 let pkg_cmd =

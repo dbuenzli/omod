@@ -49,6 +49,12 @@ val load :
        or [P/@VARIANT] will be selected. If no ambiguity arises the parameter
        is ignored. See the {{!tutorial}tutorial} for an example.}} *)
 
+val loads :
+  ?batch:bool -> ?silent:bool -> ?force:bool -> ?incs:bool -> ?init:bool ->
+  ?dir:fpath -> string list -> bool
+(** [loads] is like {!load} but for a list of module specifications.
+    Note that specified variants apply to all of the modules. *)
+
 val help : unit -> unit
 (** [help ()] prints basic help on [stdout]. *)
 
@@ -65,8 +71,14 @@ val status : unit -> unit
 val assume_load :
   ?batch:bool -> ?silent:bool -> ?force:bool -> ?incs:bool -> ?init:bool ->
   ?dir:fpath -> string -> bool
-(** [assume_load] is like {!load} but assumes the
-    corresponding load sequence was already performed. *)
+(** [assume_load] is like {!load} but assumes the corresponding load
+    sequence was already performed. *)
+
+val assume_loads :
+  ?batch:bool -> ?silent:bool -> ?force:bool -> ?incs:bool -> ?init:bool ->
+  ?dir:fpath -> string list -> bool
+(** [assume_loads] is like {!loads} but assumes the corresponding load
+    sequence was already performed. *)
 
 val assume_inc : fpath -> unit
 (** [assume_inc dir] assumes that path [dir] has been included. *)

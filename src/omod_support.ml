@@ -63,6 +63,11 @@ module Log = struct
   let nil = let f fmt = Format.ifprintf Format.std_formatter fmt in { f }
   let std = let f fmt = Format.printf ("%s: " ^^ fmt ^^ "@.") exe in { f }
   let err = let f fmt = Format.eprintf ("%s: " ^^ fmt ^^ "@.") exe in { f }
+  let time l label f =
+    let start = Sys.time () in
+    let r = f () in
+    l.f "%s: %g" label (Sys.time () -. start);
+    r
 end
 
 module Dir = struct
@@ -292,6 +297,10 @@ module Cobj = struct
       in
       loop init.nmap init.dmap init.pmap cobjs
 
+    let cobjs i =
+      let add_pkg _ cobjs acc = List.rev_append cobjs acc in
+      String.Map.fold add_pkg i.pmap []
+
     let cobjs_by_name i = i.nmap
     let cobjs_by_digest i = i.dmap
     let cobjs_by_pkg_name i = i.pmap
@@ -309,26 +318,25 @@ module Cobj = struct
     | None -> cobjs_for_mod_name n i
     | Some d -> cobjs_for_iface_digest d i
 
+    let cobjs_for_dep_res ~variants ~sat ~kind dep i =
+      let sat_obj o = is_kind kind o && sat o in
+      let try_select_variants = function
+      | ([] | [_]) as l -> l
+      | objs when String.Set.is_empty variants -> objs
+      | objs -> List.filter (fun o -> String.Set.mem (variant o) variants) objs
+      in
+      let objs = cobjs_for_dep dep i in
+      match List.filter sat_obj objs with
+      | [] -> (* Try to look for a cmi file *)
+          let sat_cmi o = is_kind Cmi o && sat o in
+          try_select_variants @@ List.filter sat_cmi objs
+      | objs ->
+          match List.filter in_archive objs with
+          | [] -> try_select_variants objs
+          | ars -> try_select_variants ars (* favour archives *)
   end
 
   type res = t String.Map.t
-
-  let resolve_dep ~variants ~sat ~kind idx dep =
-    let objs = Index.cobjs_for_dep dep idx in
-    let sat_cmi o = is_kind Cmi o && sat o in
-    let sat_obj o = is_kind kind o && sat o in
-    let try_select_variants = function
-    | ([] | [_]) as l -> l
-    | objs when String.Set.is_empty variants -> objs
-    | objs -> List.filter (fun o -> String.Set.mem (variant o) variants) objs
-    in
-    match List.filter sat_obj objs with
-    | [] -> (* Try to look for a cmi file *)
-        try_select_variants @@ List.filter sat_cmi objs
-    | objs ->
-        match List.filter in_archive objs with
-        | [] -> try_select_variants objs
-        | ars -> try_select_variants ars (* favour archives *)
 
   let add_obj res deps acc o =
     (* When we add [o] to the resolution we may add new objects that
@@ -354,12 +362,25 @@ module Cobj = struct
     in
     loop res deps (path_loads o)
 
-  let rec resolve_deps = fun ~variants ~sat ~kind idx ~roots ->
+  let add_root_alt acc cobjs =
+    let rec loop res deps = function
+    | [] -> (res, deps) :: acc
+    | o :: os ->
+        match add_obj res deps [] o with
+        | [] -> acc  (* inconsistent root objects *)
+        | [(res, deps)] -> loop res deps os
+        | _ -> assert false
+    in
+    loop String.Map.empty [] cobjs
+
+  let rec resolve_deps = fun ~variants ~sat ~kind idx ~root_alts ->
     let rec finish_next_todo acc todo = match todo with
     | [] ->
         let acc = List.find_all (fun r -> not (String.Map.is_empty r)) acc in
         begin match acc with
-        | [] -> Error (strf "No consistent load sequence could be found")
+        | [] ->
+            (* Humpf not very user friendly *)
+            Error (strf "No consistent load sequence could be found")
         | acc -> Ok acc
         end
     | (res, deps) :: todo -> loop acc todo res deps
@@ -373,7 +394,7 @@ module Cobj = struct
             | _ -> loop acc todo res (ds :: rest)
             end
         | exception Not_found ->
-            match resolve_dep ~variants ~sat ~kind idx d with
+            match Index.cobjs_for_dep_res ~variants ~sat ~kind d idx with
             | [] ->
                 Error (strf "Dependency %a cannot be resolved" pp_dep d)
             | objs ->
@@ -387,7 +408,8 @@ module Cobj = struct
     | [] :: rest -> loop acc todo res rest
     | [] -> assert false
     in
-    loop [] [] String.Map.empty (roots :: [])
+    let todo = List.fold_left add_root_alt [] root_alts in
+    finish_next_todo [] todo
 
   let fold_res res f acc =
     (* Topological sort by depth first exploration of the DAG. *)
@@ -422,8 +444,8 @@ module Cobj = struct
     let objs = List.rev_map snd @@ String.Map.bindings res in
     loop String.Set.empty acc (objs :: [])
 
-  let loads ~variants ~sat ~kind idx ~roots =
-    match resolve_deps ~variants ~sat ~kind idx ~roots with
+  let loads ~variants ~sat ~kind idx ~root_alts =
+    match resolve_deps ~variants ~sat ~kind idx ~root_alts with
     | Error _ as e -> e
     | Ok ress ->
         let add_path (seen, ps as acc) o =
