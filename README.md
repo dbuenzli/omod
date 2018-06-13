@@ -2,7 +2,7 @@ omod — Lookup and load installed OCaml modules
 -------------------------------------------------------------------------------
 %%VERSION%%
 
-Omod is a library and command line to lookup and load installed OCaml
+Omod is a library and command line tool to lookup and load installed OCaml
 modules. It provides a mecanism to load modules and their dependencies
 in the OCaml toplevel system (REPL).
 
