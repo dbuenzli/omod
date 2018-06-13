@@ -572,16 +572,23 @@ module Pkg = struct
 
   type db = info Map.t
 
-  let log_indexing ~note pkg =
-    note.Log.f "[%a] %a" (Fmt.tty_str ~mode:"32") "INDEX" pp pkg
+  let log_progress ~note ~progress pkg =
+    if progress then
+      note.Log.f "[%a] %a" (Fmt.tty_str ~mode:"32") "INDEX" pp pkg
 
-  let db ?(err = Log.err) ?(note = Log.nil) ?(init = Map.empty) pkgs =
+  let log_indexing ~note =
+    note.Log.f "[%a] In progress..." (Fmt.tty_str ~mode:"32") "INDEXING"
+
+  let db ?(err = Log.err) ?(note = Log.nil) ?(progress = false)
+      ?(init = Map.empty) pkgs
+    =
     let add_pkg acc pkg =
       let signature = signature ~err pkg in
-      let cobjs = (log_indexing ~note pkg; find_cobjs ~err pkg) in
+      let cobjs = (log_progress ~note ~progress pkg; find_cobjs ~err pkg) in
       let info = info ~signature ~cobjs in
       Map.add pkg info acc
     in
+    log_indexing ~note;
     List.fold_left add_pkg init pkgs
 
   let db_to_name_db db =
@@ -619,16 +626,20 @@ module Pkg = struct
     let unseen = Map.fold (fun k v acc -> Set.add k acc) m Set.empty in
     loop [] unseen state
 
-  let rec update ?(err = Log.err) ?(note = Log.nil) m = function
-  | [] -> m
-  | d :: ds ->
+  let update ?(err = Log.err) ?(note = Log.nil) ?(progress = false) m ds =
+    if ds = [] then m else
+    let rec loop m = function
+    | [] -> m
+    | d :: ds ->
       match d with
-      | `Gone pkg -> update ~err (Map.remove pkg m) ds
+      | `Gone pkg -> loop (Map.remove pkg m) ds
       | `New (pkg, signature)
       | `Changed (pkg, signature) ->
-          let cobjs = (log_indexing ~note pkg; find_cobjs ~err pkg) in
+          let cobjs = (log_progress ~note ~progress pkg; find_cobjs ~err pkg) in
           let info = info ~signature ~cobjs in
-          update ~err ~note (Map.add pkg info m) ds
+          loop (Map.add pkg info m) ds
+    in
+    (log_indexing ~note; loop m ds)
 end
 
 module Conf = struct
@@ -702,10 +713,10 @@ module Cache = struct
   let clear conf = match File.delete (file conf) with
   | Error _ as e -> e | Ok _ -> Ok ()
 
-  let _refresh ~err ~note conf = function
+  let _refresh ~err ~note ~progress conf = function
   | None ->
       let pkgs = Pkg.of_dir ~err (Conf.libdir conf) in
-      let db = Pkg.db ~err ~note pkgs in
+      let db = Pkg.db ~err ~note ~progress pkgs in
       let c = { pkgs = db } in
       (match write conf c with | Error _ as e -> e | Ok () -> Ok c)
   | Some c ->
@@ -714,20 +725,22 @@ module Cache = struct
       match Pkg.diff c.pkgs sigs with
       | [] -> Ok c
       | diffs ->
-          let pkgs = Pkg.update ~err ~note c.pkgs diffs in
+          let pkgs = Pkg.update ~err ~note ~progress c.pkgs diffs in
           let c = { pkgs } in
           (match write conf c with | Error _ as e -> e | Ok () -> Ok c)
 
-  let get ?(err = Log.err) ?(note = Log.nil) conf ~force ~trust =
+  let get ?(err = Log.err) ?(note = Log.nil) ?(progress = false)
+      conf ~force ~trust
+    =
     match read conf ~force ~err with
     | Error e when not force ->
         (* A bit ugly but let's make this easy *)
         Error (e ^ "\nTry to run with '-f' to force the cache")
     | Error _ as e -> e
-    | Ok c when not trust -> _refresh ~err ~note conf c
+    | Ok c when not trust -> _refresh ~err ~note ~progress conf c
     | Ok (Some c) -> Ok c
     | Ok None ->
-        if force then _refresh ~err ~note conf None else
+        if force then _refresh ~err ~note ~progress conf None else
         Error (strf "Cannot trust cache, %s does not exist" (file conf))
 
   let status ?(err = Log.err) conf c =

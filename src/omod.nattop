@@ -12,7 +12,7 @@ Omod.Private.announce ();;
 let () =
   let base = "ocaml.Opttoploop" in
   ignore @@
-  Omod.assume_load ~batch:true ~silent:true ~init:false ~incs:false base;;
+  Omod.assume_load ~batch:true ~silent:`Loads ~init:false ~incs:false base;;
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 The omod programmers

@@ -16,7 +16,7 @@ let () =
   let is_utop = Hashtbl.mem Toploop.directive_table "utop_help" in
   let base = if is_utop then "utop.UTop" else "ocaml.Toploop" in
   ignore @@
-  Omod.assume_load ~batch:true ~silent:true ~incs:false ~init:false base;;
+  Omod.assume_load ~batch:true ~silent:`Loads ~incs:false ~init:false base;;
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 The omod programmers

@@ -120,10 +120,13 @@ let cobjs_queries idx pkgs mod_specs kinds = match pkg_names_exist idx pkgs with
         in
         loop [] mod_specs
 
-let get_cache ?(err = Log.err) ?(note = Log.err) conf ~quiet ~force ~trust =
+let get_cache ?(err = Log.err) ?(note = Log.err) ?(progress = false)
+    conf ~quiet ~force ~trust
+  =
   let note = if quiet then Log.nil else note in
   let err = if quiet then Log.nil else err in
-  Cache.get ~err ~note conf ~trust ~force
+  let progress = if quiet then false else progress in
+  Cache.get ~err ~note ~progress conf ~trust ~force
 
 (* cache command *)
 
@@ -132,7 +135,9 @@ let cache_cmd conf action quiet force = match action with
 | `Clear -> handle_cache_error (Cache.clear conf) @@ fun _ -> 0
 | `Refresh ->
     handle_cache_error
-      (get_cache conf ~err:Log.err ~note:Log.std ~quiet ~force ~trust:false)
+      (get_cache conf
+         ~err:Log.err ~note:Log.std ~progress:true ~quiet ~force
+         ~trust:false)
     @@ fun _ -> 0
 | `Status ->
     let err = if quiet then Log.nil else Log.err in
@@ -362,8 +367,7 @@ let conf =
   Term.(ret @@ (const conf $ libdir $ cache))
 
 let cache =
-  let cache conf quiet force trust =
-    conf, get_cache conf ~quiet ~force ~trust
+  let cache conf quiet force trust = conf, get_cache conf ~quiet ~force ~trust
   in
   Term.(const cache $ conf $ quiet $ force $ trust)
 

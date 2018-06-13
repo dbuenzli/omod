@@ -413,6 +413,8 @@ let pp_load_sequences ppf seqs =
 
 (* API *)
 
+type silent = [ `Yes | `Loads | `No ]
+
 let ask_which_seq ppf max =
   let parse s = match int_of_string (String.trim s) with
   | exception Failure _ -> Error (strf "%s: could not parse integer" s)
@@ -426,13 +428,15 @@ let ask_which_seq ppf max =
   Format.kfprintf k ppf "@[<1>Select a load sequence in 0-%d: @]@?" max
 
 let _load
-    ~assume ?(batch = not !Sys.interactive) ?(silent = false) ?(force = false)
+    ~assume ?(batch = not !Sys.interactive) ?(silent = `No) ?(force = false)
     ?(incs = true) ?(init = true) ?dir mods
   =
   if mods = [] then true else
-  match omod_load_seqs ~silent mods with
+  let omod_silence = match silent with `Yes -> true | _ -> false in
+  match omod_load_seqs ~silent:omod_silence mods with
   | Error _ as e -> log_error e; false
   | Ok loads ->
+      let silent = match silent with `Yes | `Loads -> true | `No -> false in
       match loads with
       | [] -> assert false
       | [objs] -> load_objs ~assume ~silent ~force ~incs ~init objs

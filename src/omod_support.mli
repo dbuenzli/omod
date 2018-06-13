@@ -346,12 +346,14 @@ module Pkg : sig
   (** The type for package databases. Maps package names to their
       information. *)
 
-  val db : ?err:Log.t -> ?note:Log.t -> ?init:db -> t list -> db
-  (** [db ~err ~note ~init pkgs] is database [init] (dfeaults to
+  val db :
+    ?err:Log.t -> ?note:Log.t -> ?progress:bool -> ?init:db -> t list -> db
+  (** [db ~err ~note ~progress ~init pkgs] is database [init] (dfeaults to
       {!Map.empty}) with packages [pkgs] added. Their information
       is computed by the function using {!err} to report errors
-      (defaults to {!Log.err}) and [note] to report indexing
-      operations (defaults to {!Log.nil}). *)
+      (defaults to {!Log.err}), [note] to report indexing
+      operations (defaults to {!Log.nil}) and [progress] to indicate
+      if progress should be reported on [note] (defaults to [false]). *)
 
   val db_to_name_db : db -> (t * info) String.Map.t
   (** [db_to_name_db db] maps package names (rather than identifiers)
@@ -379,10 +381,13 @@ module Pkg : sig
   (** [diff db sgs] is the list of difference between [db] and
       package signatures [sgs]. *)
 
-  val update : ?err:Log.t -> ?note:Log.t -> db -> diff list -> db
-  (** [udpate ~err ~note db diffs] is [db] updated according to [diffs].
-      [err] is used to report errors (defaults to {!Log.err}) and
-      [note] to report indexing operations (defaults to {!Log.nil}). *)
+  val update :
+    ?err:Log.t -> ?note:Log.t -> ?progress:bool -> db -> diff list -> db
+  (** [udpate ~err ~note ~progress db diffs] is [db] updated according to
+      [diffs]. [err] is used to report errors (defaults to {!Log.err}),
+      [note] to report indexing operations (defaults to {!Log.nil}) and
+      [progress] to indicate
+      if progress should be reported on [note] (defaults to [false]). *)
 end
 
 (** Omod configuration. *)
@@ -442,12 +447,14 @@ module Cache : sig
   (** [clear conf] clears the cache [c] of configuration [conf]. *)
 
   val get :
-    ?err:Log.t -> ?note:Log.t -> Conf.t -> force:bool -> trust:bool ->
-    (t, string) result
-  (** [get ~err ~note conf ~force ~trust] get the cache of configuration
-      [conf], forcing it if [force] is [true] and making sure it is
-      fresh unless [trust] is [true], using [err] to report errors
-      and [note] to report progress. *)
+    ?err:Log.t -> ?note:Log.t -> ?progress:bool -> Conf.t ->
+    force:bool -> trust:bool -> (t, string) result
+  (** [get ~err ~note ~progress conf ~force ~trust] get the cache of
+      configuration [conf], forcing it if [force] is [true] and making
+      sure it is fresh unless [trust] is [true], using [err] to report
+      errors, [note] to report indexing
+      operations (defaults to {!Log.nil}) and [progress] to indicate
+      if progress should be reported on [note] (defaults to [false]). *)
 
   val status : ?err:Log.t -> Conf.t -> t option -> Pkg.diff list
   (** [status ~err conf c] is the status of cache [c] of configuration

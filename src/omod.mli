@@ -15,9 +15,12 @@
 type fpath = string
 (** The type for file paths. *)
 
+type silent = [ `Yes | `Loads | `No]
+(** The type for specifying silence. See {!load}. *)
+
 val load :
-  ?batch:bool -> ?silent:bool -> ?force:bool -> ?incs:bool -> ?init:bool ->
-  ?dir:fpath -> string -> bool
+  ?batch:bool -> ?silent:silent -> ?force:bool ->
+  ?incs:bool -> ?init:bool -> ?dir:fpath -> string -> bool
 (** [load ~batch ~silent ~force ~deps ~incs ~init ~dir "M"] loads module [M]
     and returns [true] if the load was successful; init files may however
     have failed to load. The exact side effects of this function are
@@ -26,8 +29,10 @@ val load :
     {- [batch] if [true] alternative load sequences error rather than
        interactively ask to select one. Defaults to
        [not !]{!Sys.interactive}.}
-    {- [silent] if [true] nothing should be logged except errors.
-       Defaults to [false].}
+    {- [silent] if [`All] nothing is logged except errors. If [`Loads]
+       then load sequences are not logged but other diagnostic messages
+       may be logged. If [`No] both load sequences and diagnostic messages
+       are logged. Defaults to [`No].}
     {- [force] if [true] force the reload of objects. Defaults to [false].}
     {- [incs] if [true] directory includes should be added. Defaults
        to [true]. See load {{!loadsem}semantics} for details.}
@@ -50,7 +55,7 @@ val load :
        is ignored. See the {{!tutorial}tutorial} for an example.}} *)
 
 val loads :
-  ?batch:bool -> ?silent:bool -> ?force:bool -> ?incs:bool -> ?init:bool ->
+  ?batch:bool -> ?silent:silent -> ?force:bool -> ?incs:bool -> ?init:bool ->
   ?dir:fpath -> string list -> bool
 (** [loads] is like {!load} but for a list of module specifications.
     Note that specified variants apply to all of the modules. *)
@@ -69,13 +74,13 @@ val status : unit -> unit
     {!load} invocations. *)
 
 val assume_load :
-  ?batch:bool -> ?silent:bool -> ?force:bool -> ?incs:bool -> ?init:bool ->
+  ?batch:bool -> ?silent:silent -> ?force:bool -> ?incs:bool -> ?init:bool ->
   ?dir:fpath -> string -> bool
 (** [assume_load] is like {!load} but assumes the corresponding load
     sequence was already performed. *)
 
 val assume_loads :
-  ?batch:bool -> ?silent:bool -> ?force:bool -> ?incs:bool -> ?init:bool ->
+  ?batch:bool -> ?silent:silent -> ?force:bool -> ?incs:bool -> ?init:bool ->
   ?dir:fpath -> string list -> bool
 (** [assume_loads] is like {!loads} but assumes the corresponding load
     sequence was already performed. *)
