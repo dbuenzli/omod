@@ -118,14 +118,21 @@ module Cobj = struct
   let pp_dep ppf (n, d) = Fmt.pf ppf "%a %s" Digest.pp_opt d n
 
   let spec_of_string s =
-    let cut_variants pkg s = match String.cut ~sep:'@' s with
-    | None -> pkg, String.capitalize_ascii s, []
-    | Some (m, vs) ->
-        pkg, String.capitalize_ascii m, String.rev_cuts ~sep:'@' vs
-    in
-    match String.cut ~sep:'.' s with
-    | None -> cut_variants None s
-    | Some (pkg, s) -> cut_variants (Some pkg) s
+    try
+      let toplevel_module s =
+        match String.index s '.' with
+        | exception Not_found -> String.capitalize_ascii s
+        | i -> failwith (strf "'%s' is not a toplevel module identifier." s)
+      in
+      let cut_variants pkg s = match String.cut ~sep:'@' s with
+      | None -> pkg, toplevel_module s, []
+      | Some (m, vs) -> pkg, toplevel_module s, String.rev_cuts ~sep:'@' vs
+      in
+      match String.cut ~sep:'.' s with
+      | None -> Ok (cut_variants None s)
+      | Some (pkg, s) -> Ok (cut_variants (Some pkg) s)
+    with
+    | Failure msg -> Error msg
 
   type kind = Cmi | Cmo | Cmx
   let kind_to_string = function Cmi -> "cmi" | Cmo -> "cmo" | Cmx -> "cmx"

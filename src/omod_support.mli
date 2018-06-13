@@ -88,7 +88,8 @@ module Cobj : sig
 
   (** {1:specs Specifications} *)
 
-  val spec_of_string : string -> string option * string * string list
+  val spec_of_string :
+    string -> (string option * string * string list, string) result
   (** [spec_of_string s] parses a compilation object specification
       from [s]. This parses the [[PKG.]M(\@VARIANT)+] syntax. *)
 

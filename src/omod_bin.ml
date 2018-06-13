@@ -90,20 +90,23 @@ let cobjs_query idx ~pkgs mod_spec kinds =
       | cobjs -> Ok cobjs
       end
   | Some mod_spec ->
-      let pkgs, name, variants = match Cobj.spec_of_string mod_spec with
-      | None, n, vs -> String.Set.of_list pkgs, n, String.Set.of_list vs
-      | Some p, n, vs -> String.Set.of_list [p], n, String.Set.of_list vs
-      in
-      let match_pkg = match_pkg pkgs in
-      let match_variant = match String.Set.is_empty variants with
-      | true -> fun _ -> true
-      | false -> fun o ->
-        (Cobj.variant o) = "" || String.Set.mem (Cobj.variant o) variants
-      in
-      let sat o = match_kind o && match_pkg o && match_variant o in
-      match List.filter sat (Cobj.Index.cobjs_for_mod_name name idx) with
-      | [] -> err_not_found idx pkgs name
-      | objs -> Ok objs
+      match Cobj.spec_of_string mod_spec with
+      | Error _ as e -> e
+      | Ok res ->
+          let pkgs, name, variants = match res with
+          | None, n, vs -> String.Set.of_list pkgs, n, String.Set.of_list vs
+          | Some p, n, vs -> String.Set.of_list [p], n, String.Set.of_list vs
+          in
+          let match_pkg = match_pkg pkgs in
+          let match_variant = match String.Set.is_empty variants with
+          | true -> fun _ -> true
+          | false -> fun o ->
+            (Cobj.variant o) = "" || String.Set.mem (Cobj.variant o) variants
+          in
+          let sat o = match_kind o && match_pkg o && match_variant o in
+          match List.filter sat (Cobj.Index.cobjs_for_mod_name name idx) with
+          | [] -> err_not_found idx pkgs name
+          | objs -> Ok objs
 
 let cobjs_queries idx pkgs mod_specs kinds = match pkg_names_exist idx pkgs with
 | Error _ as e -> e
@@ -219,23 +222,25 @@ let rec load_roots idx ~sat ~kind mod_specs =
   let rec loop vacc roots = function
   | [] -> Ok (vacc, product roots)
   | spec :: specs ->
-      let pkg, name, variants = Cobj.spec_of_string spec in
-      let variants = String.Set.of_list variants in
-      let match_pkg = match pkg with
-      | None -> fun _ -> true
-      | Some p -> fun o -> String.equal p (fst (Cobj.pkg_id o))
-      in
-      let sat o = match_pkg o && sat o in
-      let dep = name, None in
-      let cobjs = Cobj.Index.cobjs_for_dep_res ~variants ~sat ~kind dep idx in
-      if cobjs <> []
-      then loop  (String.Set.union vacc variants) (cobjs :: roots) specs
-      else
-      let pkg = match pkg with
-      | None -> String.Set.empty
-      | Some pkg -> String.Set.singleton pkg
-      in
-      err_not_found idx pkg name
+      match Cobj.spec_of_string spec with
+      | Error _ as e -> e
+      | Ok (pkg, name, variants) ->
+          let variants = String.Set.of_list variants in
+          let match_pkg = match pkg with
+          | None -> fun _ -> true
+          | Some p -> fun o -> String.equal p (fst (Cobj.pkg_id o))
+          in
+          let sat o = match_pkg o && sat o in
+          let dep = name, None in
+          match Cobj.Index.cobjs_for_dep_res ~variants ~sat ~kind dep idx with
+          | [] ->
+              let pkg = match pkg with
+              | None -> String.Set.empty
+              | Some pkg -> String.Set.singleton pkg
+              in
+              err_not_found idx pkg name
+          | cobjs ->
+              loop  (String.Set.union vacc variants) (cobjs :: roots) specs
   in
   loop String.Set.empty [] mod_specs
 
