@@ -520,9 +520,13 @@ let omod =
     `S Manpage.s_description;
     `P "$(mname) looks up installed OCaml modules. It provides a mecanism
         to load modules and their dependencies in the OCaml toplevel system
-        (REPL). See $(b,odig doc omod) for more details.";
-    `P "See $(mname) $(b,conf) for information about $(mname)
-        configuration."; ]
+        (REPL).";
+    `P "See $(b,odig doc) $(mname) for a tutorial and more details."; `Noblank;
+    `P "See $(mname) $(b,conf) for information about $(mname) configuration.";
+    `S Manpage.s_see_also;
+    `P "Consult $(b,odig doc omod) for a tutorial and more details.";
+    `S Manpage.s_bugs;
+    `P "Report them, see $(i,%%PKG_HOMEPAGE%%) for contact information." ];
   in
   fst list_cmd,
   Term.info "omod" ~version:"%%VERSION%%" ~doc ~exits ~man
