@@ -573,7 +573,8 @@ module Pkg = struct
         Fmt.faint (Cobj.path c)
     in
     Fmt.pf ppf "@[<v>| signature: %a@,| cobjs:@,  @[<v>%a@]@]"
-      Digest.pp i.signature (Fmt.list pp_cobj) i.cobjs
+      Digest.pp i.signature (Fmt.list pp_cobj)
+      (List.sort Cobj.ui_compare i.cobjs)
 
   (* Databases *)
 
