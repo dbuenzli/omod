@@ -353,14 +353,17 @@ let quiet =
 
 let conf =
   let libdir =
-    let doc = "Library directory, $(b,opam var lib) if unspecified." in
+    let doc = "Library directory, $(b,\\$PREFIX)/lib if unspecified \
+               with $(b,\\$PREFIX) the parent directory of $(mname)'s \
+               install directory." in
     let docv = "PATH" in
     let env = Arg.env_var Conf.libdir_env in
     Arg.(value & opt (some string) None & info ["libdir"] ~doc ~env ~docv)
   in
   let cache =
-    let doc = "Cache directory, $(b,opam var prefix)/var/cache/omod if \
-               unspecified."
+    let doc = "Cache directory, $(b,\\$PREFIX)/var/cache/omod if \
+               unspecified with $(b,\\$PREFIX) the parent directory of \
+               $(mname)'s install directory."
     in
     let env = Arg.env_var Conf.cache_env in
     Arg.(value & opt (some string) None & info ["cache"] ~doc ~env ~docv:"PATH")
@@ -457,7 +460,9 @@ let conf_cmd =
     `P "$(mname) needs to know the path to the OCaml library directory and
         and the path to the omod cache. Each of these two can be
         specified on the command line or via an environment variable.
-        If none of this is done they are discovered via $(b,opam(1\\)), see the
+        If none of this is done they are discovered by determining
+        the
+ via $(b,opam(1\\)), see the
         options $(b,--libdir) and $(b,--cache)." ]
   in
   Term.(const conf_cmd $ conf),

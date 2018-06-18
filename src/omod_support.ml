@@ -651,36 +651,24 @@ module Pkg = struct
 end
 
 module Conf = struct
-  let opam = lazy (Cmd.find ["opam"])
-  let opam_var var = match Lazy.force opam with
-  | None -> None
-  | Some opam ->
-      match Cmd.read [opam; "config"; "var"; var ] with
-      | Ok var -> Some (String.trim var)
-      | Error (_, e) -> failwith e
-
   let get_env k = match Sys.getenv k with
   | "" -> None | exception Not_found -> None | v -> Some v
 
-  let undet obj =
-    failwith (strf "Could not determine %s see 'omod conf --help' for more \
-                    information." obj)
+  let ( / ) = Filename.concat
+  let in_prefix_path dir =
+    Filename.(dirname @@ dirname Sys.executable_name) / dir
 
   let libdir_env = "OMOD_LIBDIR"
   let get_libdir libdir = match libdir with
   | Some l -> l | None ->
       match get_env libdir_env with
-      | Some l -> l | None ->
-          match opam_var "lib" with
-          | Some l -> l | None -> undet "libdir"
+      | Some l -> l | None -> in_prefix_path "lib"
 
   let cache_env = "OMOD_CACHE"
   let get_cache cache = match cache with
   | Some l -> l | None ->
       match get_env cache_env with
-      | Some l -> l | None ->
-          match opam_var "prefix" with
-          | Some l -> l ^ "/var/cache/omod" | None -> undet "index file"
+      | Some l -> l | None -> in_prefix_path ("var" / "cache" / "omod")
 
   type t = { libdir : Omod.fpath; cache : Omod.fpath }
 

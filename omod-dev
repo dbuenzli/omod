@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# For testing the development version. Uses current
+# opam lib dir and a cache in _build.
+
+OMOD_CACHE=_build/_omod-cache OMOD_LIBDIR=$(opam var lib) \
+ _build/src/omod_bin.native
