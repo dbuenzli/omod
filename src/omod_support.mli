@@ -397,28 +397,28 @@ module Conf : sig
   type t
   (** The type for configuration. *)
 
-  val v : ?libdir:Omod.fpath -> ?cache:Omod.fpath -> unit -> (t, string) result
-  (** [v ~libdir ~cache ()] is a configuration with given [libdir] or
-      and [cache]. If unspecified they are discovered. *)
-
-  val libdir : t -> Omod.fpath
-  (** [libdir c] is [c]'s library directory. *)
+  val v : ?cache:Omod.fpath -> ?libdir:Omod.fpath -> unit -> (t, string) result
+  (** [v ~libdir ~cache ()] is a configuration with given [cache] and
+      [libdir]. If unspecified they are discovered. *)
 
   val cache : t -> Omod.fpath
   (** [cache c] is [c]'s cache directory. *)
+
+  val libdir : t -> Omod.fpath
+  (** [libdir c] is [c]'s library directory. *)
 
   val pp : Format.formatter -> t -> unit
   (** [pp] formats configurations. *)
 
   (** {1:env Environment variables} *)
 
-  val libdir_env : string
-  (** [libdir_env] is the environment variable that can be used to
-      define a libdir. *)
-
   val cache_env : string
   (** [cache_env] is the environment variable that can be used to
       define an cache directory. *)
+
+  val libdir_env : string
+  (** [libdir_env] is the environment variable that can be used to
+      define a libdir. *)
 end
 
 (** Omod cache. *)

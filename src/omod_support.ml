@@ -670,20 +670,20 @@ module Conf = struct
       match get_env cache_env with
       | Some l -> l | None -> in_prefix_path ("var" / "cache" / "omod")
 
-  type t = { libdir : Omod.fpath; cache : Omod.fpath }
+  type t = { cache : Omod.fpath; libdir : Omod.fpath }
 
-  let v ?libdir ?cache () =
+  let v ?cache ?libdir () =
     try
-      let libdir = get_libdir libdir in
       let cache = get_cache cache in
-      Ok { libdir; cache }
+      let libdir = get_libdir libdir in
+      Ok { cache; libdir; }
 
     with
     | Failure e -> Error e
 
-  let libdir c = c.libdir
   let cache c = c.cache
-  let pp ppf c = Fmt.pf ppf "@[<v>libdir: %s@,cache: %s@]" c.libdir c.cache
+  let libdir c = c.libdir
+  let pp ppf c = Fmt.pf ppf "@[<v>cache: %s@,libdir: %s@]" c.cache c.libdir
 end
 
 module Cache = struct

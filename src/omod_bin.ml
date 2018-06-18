@@ -352,14 +352,6 @@ let quiet =
   Arg.(value & flag & info ["q"; "quiet"] ~doc)
 
 let conf =
-  let libdir =
-    let doc = "Library directory, $(b,\\$PREFIX)/lib if unspecified \
-               with $(b,\\$PREFIX) the parent directory of $(mname)'s \
-               install directory." in
-    let docv = "PATH" in
-    let env = Arg.env_var Conf.libdir_env in
-    Arg.(value & opt (some string) None & info ["libdir"] ~doc ~env ~docv)
-  in
   let cache =
     let doc = "Cache directory, $(b,\\$PREFIX)/var/cache/omod if \
                unspecified with $(b,\\$PREFIX) the parent directory of \
@@ -368,11 +360,19 @@ let conf =
     let env = Arg.env_var Conf.cache_env in
     Arg.(value & opt (some string) None & info ["cache"] ~doc ~env ~docv:"PATH")
   in
-  let conf libdir cache = match Conf.v ?libdir ?cache () with
+  let libdir =
+    let doc = "Library directory, $(b,\\$PREFIX)/lib if unspecified \
+               with $(b,\\$PREFIX) the parent directory of $(mname)'s \
+               install directory." in
+    let docv = "PATH" in
+    let env = Arg.env_var Conf.libdir_env in
+    Arg.(value & opt (some string) None & info ["libdir"] ~doc ~env ~docv)
+  in
+  let conf cache libdir = match Conf.v ?cache ?libdir () with
   | Error e -> `Error (false, e)
   | Ok v -> `Ok v
   in
-  Term.(ret @@ (const conf $ libdir $ cache))
+  Term.(ret @@ (const conf $ cache $ libdir))
 
 let cache =
   let cache conf quiet force trust = conf, get_cache conf ~quiet ~force ~trust
