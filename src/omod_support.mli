@@ -287,7 +287,8 @@ module Pkg : sig
 
   val of_dir : ?err:Log.t -> Omod.fpath -> t list
   (** [of_dir ~err dir] are the packages found in [dir]. This is
-      simply all the directory names of [dir]. [err] is used to report
+      simply all the directory names inside [dir] and an [ocaml]
+      package which points to [ocamlc -where]. [err] is used to report
       file system errors (defaults to {!Log.err}). *)
 
   val find_cobjs :
