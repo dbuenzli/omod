@@ -46,7 +46,7 @@ val load :
     {- [M] is always the top level (compilation unit) module name to load.}
     {- [PKG] constrains [M] to be found in package [PKG]. Packages
        names are the name of directories just below omod's library
-       directory (see [omod conf], and [omod pkg] for a list)}
+       directory (see [omod conf], and [omod pkg] for a list).}
     {- [@VARIANT] (repeatable) indicates that all ambiguities should be resolved
        according to variant [VARIANT]. This means that if an object
        can be found in multiple directories in a package directory

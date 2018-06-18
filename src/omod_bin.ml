@@ -397,7 +397,6 @@ let mod_names =
 let non_empty_mod_names = Arg.non_empty mod_names
 let mod_names = Arg.value mod_names
 
-
 let cobj_kinds =
   let enum = ["cmi", Cobj.Cmi; "cmo", Cobj.Cmo; "cmx", Cobj.Cmx] in
   let kind = Arg.enum enum in
@@ -461,9 +460,11 @@ let conf_cmd =
         and the path to the omod cache. Each of these two can be
         specified on the command line or via an environment variable.
         If none of this is done they are discovered by determining
-        the
- via $(b,opam(1\\)), see the
-        options $(b,--libdir) and $(b,--cache)." ]
+        the binary's install directory see the
+        options $(b,--libdir) and $(b,--cache).";
+    `P "The discovery of the directory of the package named ocaml does
+        not occur via the library directory but by looking up the
+        result of ocamlc -where";  ]
   in
   Term.(const conf_cmd $ conf),
   Term.info "conf" ~doc ~exits ~man ~man_xrefs

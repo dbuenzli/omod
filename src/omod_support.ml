@@ -477,15 +477,25 @@ module Pkg = struct
   let log_file_err ~err file e = err.Log.f "%s: %s" file e
 
   let of_dir ?(err = Log.err) dir =
+    let ocaml_pkg () = match Cmd.read ["ocamlc"; "-where"] with
+    | Ok p -> "ocaml", String.trim p
+    | Error (c, err) -> failwith (strf "ocaml: exited with [%d]: %s" c err)
+    in
     let add_pkg acc sub =
       let file = Filename.concat dir sub in
       try match Sys.is_directory file with
-      | true -> (sub, file) :: acc
       | false -> acc
+      | true when String.equal sub "ocaml" -> acc
+      | true -> (sub, file) :: acc
       with Sys_error e -> log_file_err ~err file e; acc
     in
-    try List.sort compare @@ Array.fold_left add_pkg [] (Sys.readdir dir)
-    with Sys_error e -> log_file_err ~err dir e; []
+    try
+      let pkgs = Array.fold_left add_pkg [] (Sys.readdir dir) in
+      let pkgs = ocaml_pkg () :: pkgs in
+      List.sort compare @@ pkgs
+    with
+    | Sys_error e -> log_file_err ~err dir e; []
+    | Failure e -> err.Log.f "%s" e; []
 
   let fold_pkg_files ?(err = Log.err) f acc (pkg_name, dir) =
     let rec loop acc = function
