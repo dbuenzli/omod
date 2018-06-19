@@ -304,6 +304,8 @@ rlwrap ocamlnat -I $OCAML_TOPLEVEL_PATH -noinit
 {[
 # Omod.status ()
 ]}
+   For information about how [Omod] locates packages,
+   consult [omod conf --help].
 
     {1:loadsem Load semantics and effects}
 

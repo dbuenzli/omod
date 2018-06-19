@@ -319,8 +319,8 @@ let pkg_cmd (conf, cache) out_fmt pkg_names =
 open Cmdliner
 
 let exits =
-  Term.exit_info 1 ~doc:"a specified entity name cannot be found" ::
-  Term.exit_info 2 ~doc:"a cache error occured" ::
+  Term.exit_info 1 ~doc:"a specified entity name cannot be found." ::
+  Term.exit_info 2 ~doc:"a cache error occured." ::
   Term.default_exits
 
 (* Arguments *)
@@ -457,14 +457,13 @@ let conf_cmd =
     `S Manpage.s_description;
     `P "$(tname) outputs the omod configuration.";
     `P "$(mname) needs to know the path to the OCaml library directory and
-        and the path to the omod cache. Each of these two can be
-        specified on the command line or via an environment variable.
-        If none of this is done they are discovered by determining
-        the binary's install directory see the
-        options $(b,--libdir) and $(b,--cache).";
-    `P "The discovery of the directory of the package named ocaml does
-        not occur via the library directory but by looking up the
-        result of ocamlc -where";  ]
+        the path to the omod cache.";
+    `P "Each can be specified on the command line or via an
+        environment variable. If none of this is done they are
+        determined relative to the binary's install directory. See
+        the options $(b,--libdir) and $(b,--cache) for details.";
+    `P "The package location of $(b,ocaml) is not determined via the library
+        directory, it is determined by $(b,ocamlc -where)." ]
   in
   Term.(const conf_cmd $ conf),
   Term.info "conf" ~doc ~exits ~man ~man_xrefs
@@ -500,9 +499,9 @@ let load_cmd =
   let man = [
     `S Manpage.s_description;
     `P "$(tname) shows the load sequence for a non-empty list of modules.
-        If variants are specified for a module they apply to all modules.
-        This command does not exit with 1 in case the module is unknown it
-        reports the error on stdout in machine readable format."; ]
+        If variants are specified for a module they apply to all modules.";
+    `P "This command does not exit with 1 in case a module specification
+        errors. It reports the error on stdout in machine readable format."; ]
   in
   Term.(const load_cmd $ cache $ nat $ non_empty_mod_names),
   Term.info "load" ~doc ~exits ~man ~man_xrefs
@@ -528,7 +527,8 @@ let omod =
         to load modules and their dependencies in the OCaml toplevel system
         (REPL).";
     `P "See $(b,odig doc) $(mname) for a tutorial and more details."; `Noblank;
-    `P "See $(mname) $(b,conf) for information about $(mname) configuration.";
+    `P "See $(mname) $(b,conf --help ) for information about $(mname) \
+        configuration.";
     `S Manpage.s_see_also;
     `P "Consult $(b,odig doc omod) for a tutorial and more details.";
     `S Manpage.s_bugs;
