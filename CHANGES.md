@@ -6,7 +6,7 @@ v0.0.2 2018-06-19 Zagreb
   `$LIBDIR/ocaml` (#1)
 - Get rid of shell outs to `opam` for auto-configuration: infer prefix from the
   executable's install path (#4).
-- `opam pkg --long` sort cobjs by name.
+- `omod pkg --long` sort cobjs by name.
 
 v0.0.1 2018-06-13 Zagreb
 ------------------------
