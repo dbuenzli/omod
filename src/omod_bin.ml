@@ -301,7 +301,7 @@ let find_pkgs db = function
     in
     let fnd, miss = List.fold_left add_pkg ([],[]) ns in
     match miss with
-    | [] -> Ok fnd
+    | [] -> Ok (List.rev fnd)
     | miss ->
         let exists = List.rev_map fst (String.Map.bindings ndb) in
         let add_error acc n =
