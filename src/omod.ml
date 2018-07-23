@@ -104,7 +104,7 @@ module File = struct
   let with_io_chan close file chan fn =
     try let r = fn chan in close chan; Ok r with
     | e ->
-        (try ignore (close chan) with _ -> ());
+        (try ignore (close chan) with Sys_error _ -> ());
         match e with
         | Sys_error err -> Error (strf "%s: %s" file err)
         | End_of_file -> Error (strf "%s: unexpected end of file" file)
@@ -163,7 +163,7 @@ module Cmd = struct
 
   let read args =
     let stdout = Filename.temp_file (Filename.basename Sys.argv.(0)) "omod" in
-    at_exit (fun () -> try ignore (Sys.remove stdout) with _ -> ());
+    at_exit (fun () -> try ignore (Sys.remove stdout) with Sys_error _ -> ());
     let cmd = String.concat " " (List.map Filename.quote args) in
     let cmd = quote_cmd @@ strf "%s 1>%s" cmd (Filename.quote stdout) in
     let exit = Sys.command cmd in
