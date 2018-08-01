@@ -51,7 +51,7 @@ module Cma : sig
   (** The type for cma files. *)
 
   val read : Omod.fpath -> (t, string) result
-  (** [read_cma f] reads a cma ile from [f]. *)
+  (** [read_cma f] reads a cma file from [f]. *)
 
   val name : t -> string
   (** [name cma] is the archive name of [cma]. *)

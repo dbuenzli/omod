@@ -6,7 +6,7 @@
 
 open Omod.Private
 
-let () = (* Redo that here we dont have Unix in Omod *)
+let () = (* Redo that here we don't have Unix in Omod *)
   Fmt.ansi_tty := begin
     let rec isatty fd = try Unix.isatty fd with
     | Unix.Unix_error (Unix.EINTR, _, _) -> isatty fd

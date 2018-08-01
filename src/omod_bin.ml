@@ -320,7 +320,7 @@ open Cmdliner
 
 let exits =
   Term.exit_info 1 ~doc:"a specified entity name cannot be found." ::
-  Term.exit_info 2 ~doc:"a cache error occured." ::
+  Term.exit_info 2 ~doc:"a cache error occurred." ::
   Term.default_exits
 
 (* Arguments *)
@@ -384,7 +384,7 @@ let pkgs_pos =
   Arg.(value & pos_all string [] & info [] ~doc ~docv:"PKG")
 
 let pkgs_opt =
-  let doc = "Package to consider (repetable)." in
+  let doc = "Package to consider (repeatable)." in
   Arg.(value & opt_all string [] & info ["p"; "pkg"] ~doc ~docv:"PKG")
 
 let mod_names =
@@ -523,7 +523,7 @@ let omod =
   let doc = "Lookup installed OCaml modules" in
   let man = [
     `S Manpage.s_description;
-    `P "$(mname) looks up installed OCaml modules. It provides a mecanism
+    `P "$(mname) looks up installed OCaml modules. It provides a mechanism
         to load modules and their dependencies in the OCaml toplevel system
         (REPL).";
     `P "See $(b,odig doc) $(mname) for a tutorial and more details."; `Noblank;
