@@ -209,7 +209,7 @@ module Top = struct
     | 1 (* Unavailable_primitive *) ->
         strf "The external function `%s' is not available" (str e)
     | 3 (* Wrong_vm *) ->
-        strf "Cannot find or execute the runtime sytem %s" (str e)
+        strf "Cannot find or execute the runtime system %s" (str e)
     | 4 (* Uninitialized_global *) ->
         strf "The value of global `%s' is not yet computed" (str e)
     | n ->

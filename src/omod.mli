@@ -289,8 +289,8 @@ rlwrap ocamlnat -I $OCAML_TOPLEVEL_PATH -noinit
     since [ptime] provides an [os] clock for your operating
     system and a [jsoo] clock for your browser.
 
-    The ambiguity can be automatically resolved by specfiying the
-    variant you want explicitely (see {!load} for details) for example
+    The ambiguity can be automatically resolved by specifying the
+    variant you want explicitly (see {!load} for details) for example
     to directly request the OS clock you should issue:
 {[
 # Omod.load "Ptime_clock\@os"
@@ -325,7 +325,7 @@ rlwrap ocamlnat -I $OCAML_TOPLEVEL_PATH -noinit
        but does resolve to a compiled interface, the dependency
        is assumed to be a mli-only compilation unit and the directory
        of the compiled interface is added to the includes (if [incs] is true).}
-    {- The initalization performed by [omod.top] and [omod.nattop]
+    {- The initialization performed by [omod.top] and [omod.nattop]
        {{!assume_load}assume} (with [incs:false] and [init:false])
        the following modules:
        {ul
@@ -335,7 +335,7 @@ rlwrap ocamlnat -I $OCAML_TOPLEVEL_PATH -noinit
     {- Load sequences with [vmthread] variants and objects
        of the form [m.p.ext] (profiling versions in the stdlib)
        are excluded from load sequence results. This reduces the load
-       sequence from multiple occurences to a single candidate on many
+       sequence from multiple occurrences to a single candidate on many
        modules.}
     {- For [ocamlnat] dependency analysis is made on [cmx] and [cmxa] files,
        the suffixes of resulting objects is then mapped to [cmxs]. This

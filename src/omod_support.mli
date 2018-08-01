@@ -350,7 +350,7 @@ module Pkg : sig
 
   val db :
     ?err:Log.t -> ?note:Log.t -> ?progress:bool -> ?init:db -> t list -> db
-  (** [db ~err ~note ~progress ~init pkgs] is database [init] (dfeaults to
+  (** [db ~err ~note ~progress ~init pkgs] is database [init] (defaults to
       {!Map.empty}) with packages [pkgs] added. Their information
       is computed by the function using {!err} to report errors
       (defaults to {!Log.err}), [note] to report indexing
@@ -362,7 +362,7 @@ module Pkg : sig
       to their information. *)
 
   val db_to_cobj_index : db -> Cobj.Index.t
-  (** [db_to_cobj_index db] is a compilatino object with the
+  (** [db_to_cobj_index db] is a compilation object with the
       contents of the packages of [db]. *)
 
   type diff =
