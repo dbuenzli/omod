@@ -29,8 +29,3 @@ install:
   ["install" "-d" "%{lib}%/ocaml/"]
   ["install" "src/omod.top" "src/omod.nattop" "%{lib}%/ocaml/"]
 ]
-
-remove:
-[[
-  "rm" "-f" "%{lib}%/ocaml/omod.top" "%{lib}%/ocaml/omod.nattop"
-]]
