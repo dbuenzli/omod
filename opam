@@ -1,15 +1,15 @@
-opam-version: "1.2"
+opam-version: "2.0"
 maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
 authors: ["The omod programmers"]
-homepage: "http://erratique.ch/software/omod"
-doc: "http://erratique.ch/software/omod/doc"
+homepage: "https://erratique.ch/software/omod"
+doc: "https://erratique.ch/software/omod/doc"
 license: "ISC"
-dev-repo: "http://erratique.ch/repos/omod.git"
+dev-repo: "git+https://erratique.ch/repos/omod.git"
 bug-reports: "https://github.com/dbuenzli/omod/issues"
 tags: [ "org:erratique" "dev" "toplevel" "repl" ]
-available: [ ocaml-version >= "4.03.0"]
 depends:
 [
+  "ocaml" {>= "4.03.0"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "topkg" {build & >= "0.9.1"}
