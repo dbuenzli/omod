@@ -416,7 +416,9 @@ let pp_load_sequences ppf seqs =
 type silent = [ `Yes | `Loads | `No ]
 
 let ask_which_seq ppf max =
-  let parse s = match int_of_string (String.trim s) with
+  let parse s =
+    let str = String.map (fun x -> if x = ';' then ' ' else x) s |> String.trim in
+    match int_of_string str with
   | exception Failure _ -> Error (strf "%s: could not parse integer" s)
   | v ->
       if v < 0 || v > max then Error (strf "%d: out of [0;%d] range" v max)
