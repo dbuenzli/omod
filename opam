@@ -1,4 +1,5 @@
 opam-version: "2.0"
+synopsis: "Lookup and load installed OCaml modules"
 maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
 authors: ["The omod programmers"]
 homepage: "https://erratique.ch/software/omod"
