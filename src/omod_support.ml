@@ -58,7 +58,7 @@ module Digest = struct
 end
 
 module Log = struct
-  type t = { f : 'a. ('a, Format.formatter, unit) Pervasives.format -> 'a }
+  type t = { f : 'a. ('a, Format.formatter, unit) Stdlib.format -> 'a }
   let exe = Filename.basename Sys.executable_name
   let nil = let f fmt = Format.ifprintf Format.std_formatter fmt in { f }
   let std = let f fmt = Format.printf ("%s: " ^^ fmt ^^ "@.") exe in { f }
@@ -112,7 +112,7 @@ end
 module Cobj = struct
   type pkg_id = string * Omod.fpath
   let pp_pkg_id ppf (id, loc) = Fmt.pf ppf "%s %a" id Fmt.faint loc
-  let pkg_compare = Pervasives.compare
+  let pkg_compare = Stdlib.compare
 
   type dep = string * Digest.t option
   let pp_dep ppf (n, d) = Fmt.pf ppf "%a %s" Digest.pp_opt d n
@@ -182,7 +182,7 @@ module Cobj = struct
   let to_dep c = c.name, c.iface_digest
   let is_kind k c = c.kind = k
   let equal c c' = c = c'
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
   let ui_compare o0 o1 =
     let c = String.compare (name o0) (name o1) in
     if c <> 0 then c else

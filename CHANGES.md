@@ -1,5 +1,6 @@
 
 
+- Handle the deprecation of `Pervasives` (and thus support OCaml 5.00).
 - `omod pkg`, order package info as found on the cli.
 
 v0.0.2 2018-06-19 Zagreb

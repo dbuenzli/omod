@@ -141,7 +141,7 @@ module Private : sig
     (** The type for formatters of value of type ['a]. *)
 
     val pf : Format.formatter ->
-      ('a, Format.formatter, unit) Pervasives.format -> 'a
+      ('a, Format.formatter, unit) Stdlib.format -> 'a
     (** [pf] is {!Format.fprintf}. *)
 
     val string : string t

@@ -48,7 +48,7 @@ end
 (** Logging. *)
 module Log : sig
 
-  type t = { f : 'a. ('a, Format.formatter, unit) Pervasives.format -> 'a }
+  type t = { f : 'a. ('a, Format.formatter, unit) Stdlib.format -> 'a }
   (** The type for logging functions. *)
 
   val nil : t
