@@ -1,31 +1,33 @@
 opam-version: "2.0"
+name: "omod"
+synopsis: "Lookup and load installed OCaml modules"
+description: """\
+Omod is a library and command line tool to lookup and load installed OCaml
+modules. It provides a mechanism to load modules and their dependencies
+in the OCaml toplevel system (REPL).
+
+omod is distributed under the ISC license.
+
+Homepage: http://erratique.ch/software/omod"""
 maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
-authors: ["The omod programmers"]
-homepage: "https://erratique.ch/software/omod"
-doc: "https://erratique.ch/software/omod/doc"
+authors: "The omod programmers"
 license: "ISC"
-dev-repo: "git+https://erratique.ch/repos/omod.git"
+tags: ["dev" "toplevel" "repl" "org:erratique"]
+homepage: "https://erratique.ch/software/omod"
+doc: "https://erratique.ch/software/omod/doc/"
 bug-reports: "https://github.com/dbuenzli/omod/issues"
-tags: [ "org:erratique" "dev" "toplevel" "repl" ]
-depends:
-[
-  "ocaml" {>= "4.03.0"}
+depends: [
+  "ocaml" {>= "4.08.0"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
-  "topkg" {build & >= "0.9.1"}
-  "cmdliner" {>= "1.0.2"}
+  "topkg" {build & >= "1.0.3"}
+  "cmdliner" {>= "1.1.0"}
 ]
-build:
-[[ "ocaml" "pkg/pkg.ml" "build"
-           "--dev-pkg" "%{pinned}%"
-           "--lib-dir" "%{lib}%" ]
+build: [
+  "ocaml" "pkg/pkg.ml" "build" "--dev-pkg" "%{dev}%" "--lib-dir" "%{lib}%"
 ]
-
-# Following is only to deal with
-# https://caml.inria.fr/mantis/view.php?id=7808
-
-install:
-[
+install: [
   ["install" "-d" "%{lib}%/ocaml/"]
   ["install" "src/omod.top" "src/omod.nattop" "%{lib}%/ocaml/"]
 ]
+dev-repo: "git+https://erratique.ch/repos/omod.git"

@@ -1,0 +1,29 @@
+{0 Omod {%html: <span class="version">%%VERSION%%</span>%}}
+
+
+Omod is a library and command line tool to lookup and load installed OCaml
+modules. It provides a mechanism to load modules and their dependencies
+in the OCaml toplevel system (REPL).
+
+{1:quick_start Quick start}
+
+Simply run [ocaml] and load the library:
+
+{v
+> rlwrap ocaml
+…
+# #use "omod.top"
+# Omod.load "Unix"
+# Omod.status ()
+v}
+
+You can add this [#use] invocation to your [~/.ocamlinit] file.
+
+
+{1:api User API}
+
+{!modules: Omod}
+
+{1:private Private API}
+
+{!modules Omod_ocamlc Omod_support}

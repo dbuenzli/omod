@@ -1,4 +1,4 @@
-PKG bytes cmdliner compiler-libs
+PKG b0.kit cmdliner compiler-libs
 S src
 S test
-B _build/**
+B _b0/**

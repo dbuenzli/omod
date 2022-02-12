@@ -1,5 +1,5 @@
 omod — Lookup and load installed OCaml modules
--------------------------------------------------------------------------------
+==============================================
 %%VERSION%%
 
 Omod is a library and command line tool to lookup and load installed OCaml
@@ -10,7 +10,7 @@ omod is distributed under the ISC license.
 
 Homepage: http://erratique.ch/software/omod  
 
-## Installation
+# Installation
 
 omod can be installed with `opam`:
 
@@ -19,14 +19,14 @@ omod can be installed with `opam`:
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
 
-## Usage
+# Usage
 
     rlwrap ocaml
     # #use "omod.top"
     # Omod.load "Unix"
     # Omod.status ()
 
-## Documentation
+# Documentation
 
 The documentation and API reference is generated from the source
 interfaces. It can be consulted [online][doc] or via `odig doc omod`.
