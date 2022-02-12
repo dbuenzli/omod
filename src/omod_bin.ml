@@ -117,7 +117,7 @@ let cobjs_queries idx pkgs mod_specs kinds = match pkg_names_exist idx pkgs with
         let rec loop acc = function
         | [] -> Ok acc
         | spec :: specs ->
-            match cobjs_query idx pkgs (Some spec) kinds with
+            match cobjs_query idx ~pkgs (Some spec) kinds with
             | Error _ as e -> e
             | Ok cobjs -> loop (List.rev_append cobjs acc) specs
         in
