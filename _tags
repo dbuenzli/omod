@@ -2,7 +2,9 @@ true : bin_annot, safe_string
 
 <_b0> : -traverse
 <src> : include
-<src/**> : package(compiler-libs.toplevel)
+<src/omod.*> : package(compiler-libs.toplevel)
+<src/omod_top.*> : package(compiler-libs.toplevel)
+<src/omod_nattop.*> : package(compiler-libs.toplevel)
 <src/omod_bin*> : package(cmdliner compiler-libs.common unix)
 <src/omod_support*> : package(compiler-libs.common unix)
 <src/omod_ocamlc*> : package(compiler-libs.common)
