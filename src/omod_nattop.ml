@@ -3,8 +3,14 @@
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
-#directory "%%LIBDIR%%/omod";;
-#load "omod_nattop.cmxs";;
+let init () =
+  Omod.Private.Top.set_topdirs ~is_nat:true (module Opttopdirs);
+  Omod.Private.announce ();
+  let base = "ocaml.Opttoploop" in
+  ignore @@
+  Omod.assume_load ~batch:true ~silent:`Loads ~init:false ~incs:false base
+
+let () = if !Sys.interactive then init () else ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 The omod programmers
