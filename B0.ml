@@ -25,14 +25,14 @@ let omod_lib =
   let requires = [compiler_libs_toplevel] in
   B0_ocaml.lib ~name:"omod-lib" omod ~requires ~srcs ~doc
 
-let omod_lib_nat =
+let omod_lib_nat = (* Not added to the default pack for now *)
   let doc = "The omod library for ocamlnat" in
   let srcs = Fpath.[`File (v "src/omod.mli");
                     `File (v "src/omod.ml");
                     `File (v "src/omod_nattop.ml")]
   in
   let requires = [compiler_libs_toplevel] in
-  B0_ocaml.lib ~name:"omod-nat_lib" omod_nattop ~requires ~srcs ~doc
+  B0_ocaml.lib ~name:"omod-nat-lib" omod_nattop ~requires ~srcs ~doc
 
 let omod_support_lib =
   let doc = "The omod.support library" in

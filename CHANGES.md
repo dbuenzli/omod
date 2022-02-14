@@ -1,6 +1,14 @@
+v0.0.3 2022-02-14 La Forclaz (VS)
+---------------------------------
 
 - Allow to abort load sequence prompts cleanly with C-c (#9).
 - Fix variant specification in `Omod.load` (#11).
+- Move init sequences from `omod.[nat]top` to the loaded `omod.cma`
+  and `omod_nattop.cmxs`. As a side effect removes
+  the annoying warning on load visible since 4.13 (#13) and allows
+  to load `omod` via `ocamlafind` (i.e. via `#require`, not recommended
+  but works).
+- Require OCaml 4.08.
 - Handle the deprecation of `Pervasives` (and thus support OCaml 5.00).
 - `omod pkg`, order package info as found on the cli.
 
