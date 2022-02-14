@@ -3,8 +3,15 @@
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
-#directory "%%LIBDIR%%/omod";;
-#load "omod.cma";;
+let init () =
+  Omod.Private.Top.set_topdirs ~is_nat:false (module Topdirs);
+  Omod.Private.announce ();
+  let is_utop = Hashtbl.mem Toploop.directive_table "utop_help" in
+  let base = if is_utop then "utop.UTop" else "ocaml.Toploop" in
+  ignore @@
+  Omod.assume_load ~batch:true ~silent:`Loads ~incs:false ~init:false base;;
+
+let () = if !Sys.interactive then init () else ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 The omod programmers

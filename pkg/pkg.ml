@@ -27,7 +27,7 @@ let build = Pkg.build ~pre ()
 
 let () =
   Pkg.describe "omod" ~build @@ fun c ->
-  Ok [ Pkg.mllib "src/omod.mllib";
+  Ok [ Pkg.mllib ~api:["Omod"] "src/omod.mllib";
        Pkg.mllib "src/omod_support.mllib";
        Pkg.toplevel "src/omod.top";
        Pkg.toplevel "src/omod.nattop";
