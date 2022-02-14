@@ -148,16 +148,20 @@ module Cobj = struct
       in_archive : bool; path : Omod.fpath; path_loads : t list Lazy.t; }
 
   let variant_of_path (_, pkg_path) path =
-    let rec loop pkg_path p = match Filename.dirname p with
-    | "." -> ""
-    | up when String.equal pkg_path up ->
-        if p = path then "" else
-        let v = Filename.basename p in
-        let len = String.length v in
-        if len > 0 && v.[0] = '@' then String.sub v 1 (len - 1) else v
-    | up -> loop pkg_path up
+    String.map (function '\\' -> '/' | c -> c) (* normalize on windows *) @@
+    if not (String.starts_with ~prefix:pkg_path path) then "" else
+    let chop p s =
+      let first = match p.[String.length p - 1] with
+      | '/' | '\\' -> String.length p | _ -> String.length p + 1
+      in
+      String.(sub s first (length s - first))
     in
-    loop pkg_path path
+    let variant = chop pkg_path path in
+    let variant = Filename.dirname variant in
+    if variant = "." || variant = "" then "" else
+    if variant.[0] = '@'
+    then String.sub variant 1 (String.length variant - 1)
+    else variant
 
   let modname_of_path path =
     String.capitalize_ascii @@ fst @@ File.cut_ext @@ Filename.basename path

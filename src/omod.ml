@@ -30,6 +30,17 @@ module String = struct
     in
     loop [] s
 
+  let starts_with ~prefix s = (* once 4.13 is requird this can be removed. *)
+    let len_a = length prefix in
+    let len_s = length s in
+    if len_a > len_s then false else
+    let max_idx_a = len_a - 1 in
+    let rec loop i =
+      if i > max_idx_a then true else
+      if unsafe_get prefix i <> unsafe_get s i then false else loop (i + 1)
+    in
+    loop 0
+
   (* Suggesting *)
 
   let edit_distance s0 s1 =

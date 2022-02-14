@@ -50,13 +50,13 @@ variant you want explicitly (see {!Omod.load} for details) for example
 to directly request the OS clock you should issue:
 
 {[
-# Omod.load "Ptime_clock@os"
+# Omod.load "Ptime_clock@clock/os"
 ]}
 
 In a script it would even be better to write:
 
 {[
-# Omod.load "ptime.Ptime_clock@os"
+# Omod.load "ptime.Ptime_clock@clock/os"
 ]}
 
 Finally to list what was loaded by [Omod] type:
