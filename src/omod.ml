@@ -431,12 +431,14 @@ let ask_which_seq ppf max =
   | exception Failure _ -> Error (strf "%s: could not parse integer" s)
   | v ->
       if v < 0 || v > max then Error (strf "%d: out of [0;%d] range" v max)
-      else Ok v
+      else Ok (Some v)
   in
   let k ppf = match input_line stdin with
   | exception End_of_file -> parse "" | s -> parse s
+  | exception Sys.Break -> Ok None
   in
-  Format.kfprintf k ppf "@[<1>Select a load sequence in 0-%d: @]@?" max
+  Format.kfprintf k ppf
+    "@[<1>Select a load sequence in 0-%d (C-c to abort): @]@?" max
 
 let _load
     ~assume ?(batch = not !Sys.interactive) ?(silent = `No) ?(force = false)
@@ -459,8 +461,10 @@ let _load
           if batch then false else
           match ask_which_seq Format.std_formatter (List.length alts - 1) with
           | Error _ as e -> log_error e; false
-          | Ok n ->
+          | Ok None -> log ""; false
+          | Ok (Some n) ->
               load_objs ~assume ~silent ~force ~incs ~init (List.nth alts n)
+
 
 let loads = _load ~assume:false
 let assume_loads = _load ~assume:true

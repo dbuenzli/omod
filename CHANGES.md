@@ -1,5 +1,6 @@
 
-
+- Allow to abort load sequence prompts cleanly with C-c (#9).
+- Fix variant specification in `Omod.load` (#11).
 - Handle the deprecation of `Pervasives` (and thus support OCaml 5.00).
 - `omod pkg`, order package info as found on the cli.
 
