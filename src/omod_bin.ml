@@ -23,7 +23,8 @@ let did_you_mean ?(pre = "Unknown") ?(post = "") ~kind (n, hints) =
   | [] -> strf "@[%s %s '%s'%s.@]" pre kind n post
   | hints ->
       strf "@[%s %s '%s'%s.@ Did you mean %a ?@]"
-        pre kind n post Format.pp_print_text (Cmdliner.Arg.doc_alts hints)
+        pre kind n post Format.pp_print_text
+        (Cmdliner.Arg.doc_alts ~quoted:true hints)
 
 (* Lookups *)
 
@@ -133,21 +134,22 @@ let get_cache ?(err = Log.err) ?(note = Log.err) ?(progress = false)
 
 (* cache command *)
 
-let cache_cmd conf action quiet force = match action with
-| `Path -> Printf.printf "%s\n%!" (Cache.file conf); 0
-| `Clear -> handle_cache_error (Cache.clear conf) @@ fun _ -> 0
-| `Refresh ->
-    handle_cache_error
-      (get_cache conf
-         ~err:Log.err ~note:Log.std ~progress:true ~quiet ~force
-         ~trust:false)
-    @@ fun _ -> 0
-| `Status ->
-    let err = if quiet then Log.nil else Log.err in
-    handle_cache_error (Cache.read conf ~force ~err) @@ fun c ->
-    match Cache.status conf c ~err with
-    | [] -> 0
-    | st -> Format.printf "@[<v>%a@]@." (Fmt.list Pkg.pp_diff) st; 0
+let cache_path_cmd conf = Printf.printf "%s\n%!" (Cache.file conf); 0
+let cache_clear_cmd conf =
+  handle_cache_error (Cache.clear conf) @@ fun _ -> 0
+
+let cache_refresh_cmd conf quiet force =
+  handle_cache_error
+    (get_cache conf
+       ~err:Log.err ~note:Log.std ~progress:true ~quiet ~force
+       ~trust:false) @@ fun _ -> 0
+
+let cache_status_cmd conf quiet force =
+  let err = if quiet then Log.nil else Log.err in
+  handle_cache_error (Cache.read conf ~force ~err) @@ fun c ->
+  match Cache.status conf c ~err with
+  | [] -> 0
+  | st -> Format.printf "@[<v>%a@]@." (Fmt.list Pkg.pp_diff) st; 0
 
 (* cobj command *)
 
@@ -319,9 +321,9 @@ let pkg_cmd (conf, cache) out_fmt pkg_names =
 open Cmdliner
 
 let exits =
-  Term.exit_info 1 ~doc:"a specified entity name cannot be found." ::
-  Term.exit_info 2 ~doc:"a cache error occurred." ::
-  Term.default_exits
+  Cmd.Exit.info 1 ~doc:"a specified entity name cannot be found." ::
+  Cmd.Exit.info 2 ~doc:"a cache error occurred." ::
+  Cmd.Exit.defaults
 
 (* Arguments *)
 
@@ -339,12 +341,12 @@ let out_fmt =
 
 let trust =
   let doc = "Trust the cache to be up-to-date." in
-  let env = Arg.env_var "OMOD_TRUST_CACHE" in
+  let env = Cmd.Env.info "OMOD_TRUST_CACHE" in
   Arg.(value & flag & info ["t"; "trust-cache"] ~doc ~env)
 
 let force =
   let doc = "Force rebuilding the cache in case of error." in
-  let env = Arg.env_var "OMOD_FORCE_CACHE" in
+  let env = Cmd.Env.info "OMOD_FORCE_CACHE" in
   Arg.(value & flag & info ["f"; "force"] ~doc ~env)
 
 let quiet =
@@ -352,21 +354,23 @@ let quiet =
   Arg.(value & flag & info ["q"; "quiet"] ~doc)
 
 let conf =
+  let docs = Manpage.s_common_options in
   let cache =
     let doc = "Cache directory, $(b,\\$PREFIX)/var/cache/omod if \
                unspecified with $(b,\\$PREFIX) the parent directory of \
                $(mname)'s install directory."
     in
-    let env = Arg.env_var Conf.cache_env in
-    Arg.(value & opt (some string) None & info ["cache"] ~doc ~env ~docv:"PATH")
+    let docv = "PATH" in
+    let env = Cmd.Env.info Conf.cache_env in
+    Arg.(value & opt (some string) None & info ["cache"] ~doc ~docs ~env ~docv)
   in
   let libdir =
     let doc = "Library directory, $(b,\\$PREFIX)/lib if unspecified \
                with $(b,\\$PREFIX) the parent directory of $(mname)'s \
                install directory." in
     let docv = "PATH" in
-    let env = Arg.env_var Conf.libdir_env in
-    Arg.(value & opt (some string) None & info ["libdir"] ~doc ~env ~docv)
+    let env = Cmd.Env.info Conf.libdir_env in
+    Arg.(value & opt (some string) None & info ["libdir"] ~doc ~docs ~env ~docv)
   in
   let conf cache libdir = match Conf.v ?cache ?libdir () with
   | Error e -> `Error (false, e)
@@ -413,46 +417,43 @@ let nat =
 
 let cache_cmd =
   let doc = "Operate on the omod cache" in
-  let man_xrefs = [ `Main ] in
   let man = [
-    `S Manpage.s_synopsis;
-    `P "$(mname) $(tname) $(i,ACTION) [$(i,OPTION)]...";
     `S Manpage.s_description;
-    `P "The $(tname) command operates on the omod cache. See the available
-        actions below.";
-    `S "ACTIONS";
-    `I ("$(b,path)", "Display the path to the cache");
-    `I ("$(b,clear)", "Clear the cache");
-    `I ("$(b,refresh)", "Refresh the cache");
-    `I ("$(b,status)", "Display cache status"); ]
+    `P "The $(tname) command operates on the omod cache. The default command \
+        is $(tname) $(b,status)."; ]
   in
-  let action =
-    let action =
-      [ "path", `Path; "clear", `Clear; "refresh", `Refresh; "status", `Status]
-    in
-    let doc = strf "The action to perform. $(docv) must be one of %s."
-        (Arg.doc_alts_enum action)
-    in
-    let action = Arg.enum action in
-    Arg.(required & pos 0 (some action) None & info [] ~doc ~docv:"ACTION")
+  let sub n ~doc t = Cmd.v (Cmd.info n ~doc ~exits) t in
+  let cache_path_cmd =
+    sub "path" ~doc:"Display the path to the cache"
+      Term.(const cache_path_cmd $ conf)
   in
-  Term.(const cache_cmd $ conf $ action $ quiet $ force),
-  Term.info "cache" ~doc ~exits ~man ~man_xrefs
+  let cache_clear_cmd =
+    sub "clear" ~doc:"Clear the cache"
+      Term.(const cache_clear_cmd $ conf)
+  in
+  let cache_refresh_cmd =
+    sub "refresh" ~doc:"Refresh the cache"
+      Term.(const cache_refresh_cmd $ conf $ quiet $ force)
+  in
+  let cache_status_term = Term.(const cache_status_cmd $ conf $ quiet $ force)in
+  let cache_status_cmd =
+    sub "status" ~doc:"Display the cache status" cache_status_term
+  in
+  Cmd.group (Cmd.info "cache" ~doc ~exits ~man) ~default:cache_status_term
+    [cache_path_cmd; cache_clear_cmd; cache_refresh_cmd; cache_status_cmd ]
 
 let cobj_cmd =
   let doc = "Show compilation objects" in
-  let man_xrefs = [ `Main ] in
   let man = [
     `S Manpage.s_description;
     `P "$(tname) shows compilation objects known to omod. If no name or
         package restriction is specified, all objects are shown."; ]
   in
-  Term.(const cobj_cmd $ cache $ out_fmt $ pkgs_opt $ mod_names $ cobj_kinds),
-  Term.info "cobj" ~doc ~exits ~man ~man_xrefs
+  Cmd.v (Cmd.info "cobj" ~doc ~exits ~man)
+    Term.(const cobj_cmd $ cache $ out_fmt $ pkgs_opt $ mod_names $ cobj_kinds)
 
 let conf_cmd =
   let doc = "Show omod configuration" in
-  let man_xrefs = [ `Main ] in
   let man = [
     `S Manpage.s_description;
     `P "$(tname) outputs the omod configuration.";
@@ -465,37 +466,34 @@ let conf_cmd =
     `P "The package location of $(b,ocaml) is not determined via the library
         directory, it is determined by $(b,ocamlc -where)." ]
   in
-  Term.(const conf_cmd $ conf),
-  Term.info "conf" ~doc ~exits ~man ~man_xrefs
+  Cmd.v (Cmd.info "conf" ~doc ~exits ~man)
+    Term.(const conf_cmd $ conf)
 
 let check_cmd =
   let doc = "Check accessible modules can be loaded" in
-  let man_xrefs = [ `Main ] in
   let man = [
     `S Manpage.s_description;
     `P "$(tname) reports accessible modules (see $(b,omod list)) which
         cannot be loaded."; ]
   in
   let exits =
-    Term.exit_info 3 ~doc:"some accessible modules cannot be loaded" :: exits
+    Cmd.Exit.info 3 ~doc:"some accessible modules cannot be loaded" :: exits
   in
-  Term.(const check_cmd $ cache $ pkgs_opt $ nat),
-  Term.info "check" ~doc ~exits ~man ~man_xrefs
+  Cmd.v (Cmd.info "check" ~doc ~exits ~man)
+    Term.(const check_cmd $ cache $ pkgs_opt $ nat)
 
+let list_term = Term.(const list_cmd $ cache $ out_fmt $ pkgs_opt $ mod_names)
 let list_cmd =
   let doc = "Show accessible modules (default command)" in
-  let man_xrefs = [ `Main ] in
   let man = [
     `S Manpage.s_description;
     `P "$(tname) lists the accessible modules names. These are
         the names of cmi files installed." ]
   in
-  Term.(const list_cmd $ cache $ out_fmt $ pkgs_opt $ mod_names),
-  Term.info "list" ~doc ~exits ~man ~man_xrefs
+  Cmd.v (Cmd.info "list" ~doc ~exits ~man) list_term
 
 let load_cmd =
   let doc = "Show module load sequence" in
-  let man_xrefs = [ `Main ] in
   let man = [
     `S Manpage.s_description;
     `P "$(tname) shows the load sequence for a non-empty list of modules.
@@ -503,23 +501,20 @@ let load_cmd =
     `P "This command does not exit with 1 in case a module specification
         errors. It reports the error on stdout in machine readable format."; ]
   in
-  Term.(const load_cmd $ cache $ nat $ non_empty_mod_names),
-  Term.info "load" ~doc ~exits ~man ~man_xrefs
+  Cmd.v (Cmd.info "load" ~doc ~exits ~man)
+    Term.(const load_cmd $ cache $ nat $ non_empty_mod_names)
 
 let pkg_cmd =
   let doc = "Show packages" in
-  let man_xrefs = [ `Main ] in
   let man = [
     `S Manpage.s_description;
     `P "The $(tname) command shows packages known to omod. If no packages
         are specified, all packages are shown." ]
   in
-  Term.(const pkg_cmd $ cache $ out_fmt $ pkgs_pos),
-  Term.info "pkg" ~doc ~exits ~man ~man_xrefs
+  Cmd.v (Cmd.info "pkg" ~doc ~exits ~man)
+    Term.(const pkg_cmd $ cache $ out_fmt $ pkgs_pos)
 
-(* Main command *)
-
-let omod =
+let tool =
   let doc = "Lookup installed OCaml modules" in
   let man = [
     `S Manpage.s_description;
@@ -534,14 +529,13 @@ let omod =
     `S Manpage.s_bugs;
     `P "Report them, see $(i,%%PKG_HOMEPAGE%%) for contact information." ];
   in
-  fst list_cmd,
-  Term.info "omod" ~version:"%%VERSION%%" ~doc ~exits ~man
-
-let () =
-  let cmds = [cache_cmd; check_cmd; cobj_cmd; conf_cmd; list_cmd; load_cmd;
+  let subs = [cache_cmd; check_cmd; cobj_cmd; conf_cmd; list_cmd; load_cmd;
               pkg_cmd]
   in
-  Term.(exit_status @@ eval_choice omod cmds)
+  Cmd.group (Cmd.info "omod" ~version:"%%VERSION%%" ~doc ~exits ~man)
+    ~default:list_term subs
+
+let () = exit (Cmd.eval' tool)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 The omod programmers
