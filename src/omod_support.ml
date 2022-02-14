@@ -494,8 +494,7 @@ module Pkg = struct
       let pkgs = ocaml_pkg () :: pkgs in
       List.sort compare @@ pkgs
     with
-    | Sys_error e -> log_file_err ~err dir e; []
-    | Failure e -> err.Log.f "%s" e; []
+    | Sys_error e | Failure e -> err.Log.f "%s" e; []
 
   let fold_pkg_files ?(err = Log.err) f acc (pkg_name, dir) =
     let rec loop acc = function
