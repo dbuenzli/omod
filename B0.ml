@@ -5,18 +5,34 @@ open Result.Syntax
 (* OCaml libraries *)
 
 let omod = B0_ocaml.libname "omod"
+let omod_nattop = B0_ocaml.libname "omod.nattop"
 let omod_support = B0_ocaml.libname "omod.support"
+
 
 let cmdliner = B0_ocaml.libname "cmdliner"
 let compiler_libs_common = B0_ocaml.libname "compiler-libs.common"
+let compiler_libs_toplevel = B0_ocaml.libname "compiler-libs.toplevel"
 let unix = B0_ocaml.libname "unix"
 
 (* Omod libraries *)
 
 let omod_lib =
   let doc = "The omod library" in
-  let srcs = Fpath.[`File (v "src/omod.mli"); `File (v "src/omod.ml")] in
-  B0_ocaml.lib ~name:"omod-lib" omod ~srcs ~doc
+  let srcs = Fpath.[`File (v "src/omod.mli");
+                    `File (v "src/omod.ml");
+                    `File (v "src/omod_top.ml")]
+  in
+  let requires = [compiler_libs_toplevel] in
+  B0_ocaml.lib ~name:"omod-lib" omod ~requires ~srcs ~doc
+
+let omod_lib_nat =
+  let doc = "The omod library for ocamlnat" in
+  let srcs = Fpath.[`File (v "src/omod.mli");
+                    `File (v "src/omod.ml");
+                    `File (v "src/omod_nattop.ml")]
+  in
+  let requires = [compiler_libs_toplevel] in
+  B0_ocaml.lib ~name:"omod-nat_lib" omod_nattop ~requires ~srcs ~doc
 
 let omod_support_lib =
   let doc = "The omod.support library" in
