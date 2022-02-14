@@ -126,7 +126,7 @@ module Cobj = struct
       in
       let cut_variants pkg s = match String.cut ~sep:'@' s with
       | None -> pkg, toplevel_module s, []
-      | Some (m, vs) -> pkg, toplevel_module s, String.rev_cuts ~sep:'@' vs
+      | Some (m, vs) -> pkg, toplevel_module m, String.rev_cuts ~sep:'@' vs
       in
       match String.cut ~sep:'.' s with
       | None -> Ok (cut_variants None s)
