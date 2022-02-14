@@ -6,9 +6,7 @@
 
 (** Load installed modules in the toplevel.
 
-    See the {{!tutorial}Tutorial}.
-
-    {e %%VERSION%% — {{:%%PKG_HOMEPAGE%% }homepage}} *)
+    See the {{!page-tutorial}tutorial}. *)
 
 (** {1 Omod} *)
 
@@ -234,7 +232,7 @@ module Private : sig
     (** [is_nat ()] is [true] if the current toplevel implementation
         is [ocamlnat]. *)
 
-    (** {1:topdir Topdirs implementations} *)
+    (** {1:topdirimpl Topdirs implementations} *)
 
     (** The type for Topdir module implementations. *)
     module type TOPDIRS = sig
@@ -250,64 +248,7 @@ module Private : sig
   end
 end
 
-(** {1:tutorial Tutorial}
-
-    To use the toplevel helpers simply bring the [Omod] module
-    in your scope: type or add the following line to your
-    [~/.ocamlinit] file.
-{[#use "omod.top"]}
-
-    If you are using [ocamlnat] you
-    {{:https://caml.inria.fr/mantis/view.php?id=7589}unfortunately} need to
-    [#use] another file:
-{[#use "omod.nattop"]}
-    It is also likely that [opam]'s initialization bits in [.ocamlinit] to
-    find the file to [#use] won't work. So you need to invoke
-    [ocamlnat] with [-noinit] and indicate where the file to [#use] can
-    be found. The following invocation should work:
-{[
-rlwrap ocamlnat -I $OCAML_TOPLEVEL_PATH -noinit
-]}
-    Now whenever you want to use a module named [M] invoke:
-{[# Omod.load "M"]}
-    This will recursively load its dependencies and toplevel init files.
-    See {!load} for more options and details.
-
-    If you are using [omod] in scripts you should also specify the
-    package [PKG] where [M] should be found using the [PKG.M]
-    syntax. This because a further package install could also install
-    a module [M] resulting in a load ambiguity and your script no longer
-    working.
-
-    If you run into multiple load sequence resolutions, [Omod]
-    interactively asks to choose one of the possible
-    sequences. Assuming you have the package [ptime] installed this is
-    an example:
-{[
-# Omod.load "Ptime_clock"
-]}
-    since [ptime] provides an [os] clock for your operating
-    system and a [jsoo] clock for your browser.
-
-    The ambiguity can be automatically resolved by specifying the
-    variant you want explicitly (see {!load} for details) for example
-    to directly request the OS clock you should issue:
-{[
-# Omod.load "Ptime_clock\@os"
-]}
-    In a script it would even be better to write:
-{[
-# Omod.load "ptime.Ptime_clock\@os"
-]}
-
-   Finally to list what was loaded by [Omod] type:
-{[
-# Omod.status ()
-]}
-   For information about how [Omod] locates packages,
-   consult [omod conf --help].
-
-    {1:loadsem Load semantics and effects}
+(**  {1:loadsem Load semantics and effects}
 
     {ul
 
@@ -351,6 +292,7 @@ rlwrap ocamlnat -I $OCAML_TOPLEVEL_PATH -noinit
     value [ODIG_TOP_LOCAL_DIR]. These load functions always first look up
     for objects locally and then in packages.
 *)
+
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 The omod programmers

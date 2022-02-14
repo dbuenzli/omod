@@ -32,4 +32,6 @@ let () =
        Pkg.toplevel "src/omod.top";
        Pkg.toplevel "src/omod.nattop";
        Pkg.bin "src/omod_bin" ~dst:"omod";
+       Pkg.doc "doc/index.mld" ~dst:"odoc-pages/index.mld";
+       Pkg.doc "doc/tutorial.mld" ~dst:"odoc-pages/tutorial.mld";
        Pkg.test "test/test"; ]

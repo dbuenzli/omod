@@ -259,7 +259,7 @@ module Cobj : sig
 
   val fold_res : res -> (t -> 'a -> 'a) -> 'a -> 'a
   (** [fold_res res f acc] folds [f] with [acc] over the partial
-      dependency order of [res] @raise Invalid_argument if the
+      dependency order of [res] raises [Invalid_argument] if the
       dependencies of objects in [res] are not defined in [res], this
       can't happen if the map is a result of {!resolve_deps}. *)
 
@@ -352,7 +352,7 @@ module Pkg : sig
     ?err:Log.t -> ?note:Log.t -> ?progress:bool -> ?init:db -> t list -> db
   (** [db ~err ~note ~progress ~init pkgs] is database [init] (defaults to
       {!Map.empty}) with packages [pkgs] added. Their information
-      is computed by the function using {!err} to report errors
+      is computed by the function using [err] to report errors
       (defaults to {!Log.err}), [note] to report indexing
       operations (defaults to {!Log.nil}) and [progress] to indicate
       if progress should be reported on [note] (defaults to [false]). *)
