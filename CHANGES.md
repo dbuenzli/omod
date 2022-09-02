@@ -1,3 +1,8 @@
+
+
+- Stop using Toploop.directive_table, this means 
+  OCaml 4.13 is required.
+
 v0.0.3 2022-02-14 La Forclaz (VS)
 ---------------------------------
 
