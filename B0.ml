@@ -1,5 +1,4 @@
 open B0_kit.V000
-open B00_std
 open Result.Syntax
 
 (* OCaml libraries *)
@@ -50,7 +49,7 @@ let omod_tool =
   let doc = "The omod support tool" in
   let srcs = Fpath.[`File (v "src/omod_bin.ml")] in
   let requires = [cmdliner; omod; omod_support] in
-  B0_ocaml.exe "omod-tool" ~srcs ~doc ~requires
+  B0_ocaml.exe "omod" ~public:true ~srcs ~doc ~requires
 
 let default =
   let meta =
@@ -64,22 +63,22 @@ let default =
     |> add repo "git+https://erratique.ch/repos/omod.git"
     |> add issues "https://github.com/dbuenzli/omod/issues"
     |> add description_tags ["dev"; "toplevel"; "repl"; "org:erratique"]
-    |> add B0_opam.Meta.build
+    |> tag B0_opam.tag
+    |> add B0_opam.build
       {|[["ocaml" "pkg/pkg.ml" "build"
          "--dev-pkg" "%{dev}%"
          "--lib-dir" "%{lib}%"]]|}
-    |> tag B0_opam.tag
-    |> add B0_opam.Meta.depends
+    |> add B0_opam.depends
       [ "ocaml", {|>= "4.08.0"|};
         "ocamlfind", {|build|};
         "ocamlbuild", {|build|};
         "topkg", {|build & >= "1.0.3"|};
         "cmdliner", {|>= "1.1.0"|}; ]
-    |> add B0_opam.Meta.install {|
+    |> add B0_opam.install {|
       # Following is only to deal with
       # https://caml.inria.fr/mantis/view.php?id=7808
       [["install" "-d" "%{lib}%/ocaml/"]
        ["install" "src/omod.top" "src/omod.nattop" "%{lib}%/ocaml/"]]|}
   in
-  B0_pack.v "default" ~doc:"omod package" ~meta ~locked:true @@
+  B0_pack.make "default" ~doc:"omod package" ~meta ~locked:true @@
   [omod_lib; omod_support_lib; omod_tool]
