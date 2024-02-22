@@ -17,7 +17,7 @@ homepage: "https://erratique.ch/software/omod"
 doc: "https://erratique.ch/software/omod/doc/"
 bug-reports: "https://github.com/dbuenzli/omod/issues"
 depends: [
-  "ocaml" {>= "4.08.0"}
+  "ocaml" {>= "5.2.0"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "topkg" {build & >= "1.0.3"}

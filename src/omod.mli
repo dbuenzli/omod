@@ -109,10 +109,6 @@ module Private : sig
 
     val rev_cuts : sep:char -> string -> string list
 
-    val starts_with : prefix:string -> string -> bool
-    (** [starts_with ~prefix s] is [true] iff [prefix] is a prefix
-        of [s]. {b Note.} Available in 4.13. *)
-
     val edit_distance : string -> string -> int
     (** [edit_distance s0 s1] is the number of single character edits
         (insertion, deletion, substitution) that are needed to change
