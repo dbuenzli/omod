@@ -69,7 +69,7 @@ let default =
          "--dev-pkg" "%{dev}%"
          "--lib-dir" "%{lib}%"]]|}
     |> add B0_opam.depends
-      [ "ocaml", {|>= "4.08.0"|};
+      [ "ocaml", {|>= "5.2.0"|};
         "ocamlfind", {|build|};
         "ocamlbuild", {|build|};
         "topkg", {|build & >= "1.0.3"|};
