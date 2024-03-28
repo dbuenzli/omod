@@ -28,8 +28,27 @@ let omod_lib_nat = (* Not added to the default pack for now *)
   B0_ocaml.lib ~name:"omod-nat-lib" omod_nattop ~requires ~srcs ~doc
 
 let omod_support_lib =
+  let ocaml_cond b =
+    (* TODO for this to work we need a corresponding mli (whatever
+       the content) in the directories with the
+       implementation. See https://github.com/ocaml/ocaml/issues/9717 *)
+    let open Fut.Syntax in
+    let* version = B0_ocaml.Conf.version' b in
+    let dir = match version with
+    | v when v < (5, 2, 0, None) -> "omod_cu_pre_520"
+    | _ -> "omod_cu_geq_520"
+    in
+    let scope_dir = B0_build.scope_dir b in
+    let file = Fpath.(scope_dir / "src" / "support" / dir / "omod_cu.ml") in
+    B0_memo.ready_file (B0_build.memo b) file;
+    Fut.return (Fpath.Set.singleton file)
+  in
   let doc = "The omod.support library" in
-  let srcs = [`Dir ~/"src/support"]; in
+  let srcs = [
+    `Dir ~/"src/support";
+    `Fut ocaml_cond;
+    `X ~/"src/support/omod_cu.ml"; (* Remove when we rid of topkg *)];
+  in
   let requires = [omod; unix; compiler_libs_common] in
   B0_ocaml.lib omod_support ~srcs ~doc ~requires
 
@@ -57,7 +76,7 @@ let default =
          "--dev-pkg" "%{dev}%"
          "--lib-dir" "%{lib}%"]]|}
     |> ~~ B0_opam.depends
-      [ "ocaml", {|>= "4.13.0"|};
+      [ "ocaml", {|>= "4.14.0"|};
         "ocamlfind", {|build|};
         "ocamlbuild", {|build|};
         "topkg", {|build & >= "1.0.3"|};

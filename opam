@@ -2,9 +2,9 @@ opam-version: "2.0"
 name: "omod"
 synopsis: "Lookup and load installed OCaml modules"
 description: """\
-Omod is a library and command line tool to lookup and load installed OCaml
-modules. It provides a mechanism to load modules and their dependencies
-in the OCaml toplevel system (REPL).
+Omod is a library and command line tool to lookup and load installed
+OCaml modules. It provides a mechanism to load modules and their
+dependencies in the OCaml toplevel system (REPL).
 
 omod is distributed under the ISC license.
 
@@ -17,7 +17,7 @@ homepage: "https://erratique.ch/software/omod"
 doc: "https://erratique.ch/software/omod/doc/"
 bug-reports: "https://github.com/dbuenzli/omod/issues"
 depends: [
-  "ocaml" {>= "4.13.0"}
+  "ocaml" {>= "4.14.0"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "topkg" {build & >= "1.0.3"}

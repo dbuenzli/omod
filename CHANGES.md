@@ -1,6 +1,6 @@
 
+- Require and support OCaml >= 4.14.0. 
 - Stop using Toploop.directive_table, this means 
-  OCaml 4.13 is required.
 
 v0.0.3 2022-02-14 La Forclaz (VS)
 ---------------------------------
@@ -10,7 +10,7 @@ v0.0.3 2022-02-14 La Forclaz (VS)
 - Move init sequences from `omod.[nat]top` to the loaded `omod.cma`
   and `omod_nattop.cmxs`. As a side effect removes
   the annoying warning on load visible since 4.13 (#13) and allows
-  to load `omod` via `ocamlafind` (i.e. via `#require`, not recommended
+  to load `omod` via `ocamlfind` (i.e. via `#require`, not recommended
   but works).
 - Require OCaml 4.08.
 - Handle the deprecation of `Pervasives` (and thus support OCaml 5.00).

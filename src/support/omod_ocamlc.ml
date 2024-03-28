@@ -141,7 +141,7 @@ module Cmo = struct
   type t = dobj
 
   let of_compilation_unit cu =
-    let name = cu.Cmo_format.cu_name in
+    let name = Omod_cu.name cu in
     let iface_digest, iface_deps = split_dep name cu.Cmo_format.cu_imports in
     { name; iface_digest; iface_deps }
 
