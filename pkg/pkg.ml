@@ -35,7 +35,7 @@ let () =
   let has_ocamlnat = Conf.value c has_ocamlnat in
   Ok [ Pkg.mllib ~api:["Omod"] "src/omod.mllib";
        Pkg.mllib ~cond:has_ocamlnat ~api:["Omod"] "src/omod_nattop.mllib";
-       Pkg.mllib "src/omod_support.mllib";
+       Pkg.mllib ~dst_dir:"support" "src/support/omod_support.mllib";
        Pkg.toplevel "src/omod.top";
        Pkg.toplevel ~cond:has_ocamlnat "src/omod.nattop";
        Pkg.bin "src/omod_bin" ~dst:"omod";
