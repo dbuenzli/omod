@@ -10,6 +10,9 @@ let omod_support = B0_ocaml.libname "omod.support"
 let cmdliner = B0_ocaml.libname "cmdliner"
 let compiler_libs_common = B0_ocaml.libname "compiler-libs.common"
 let compiler_libs_toplevel = B0_ocaml.libname "compiler-libs.toplevel"
+let compiler_libs_native_toplevel =
+  B0_ocaml.libname "compiler-libs.native-toplevel"
+
 let unix = B0_ocaml.libname "unix"
 
 (* Omod libraries *)
@@ -27,37 +30,42 @@ let omod_lib_nat = (* Not added to the default pack for now *)
   let requires = [compiler_libs_toplevel] in
   B0_ocaml.lib ~name:"omod-nat-lib" omod_nattop ~requires ~srcs ~doc
 
-let omod_support_lib =
-  let ocaml_cond b =
-    (* TODO for this to work we need a corresponding mli (whatever
+let ocaml_cond b =
+  (* TODO for this to work we need a corresponding mli (whatever
        the content) in the directories with the
        implementation. See https://github.com/ocaml/ocaml/issues/9717 *)
-    let open Fut.Syntax in
-    let* version = B0_ocaml.Conf.version' b in
-    let dir = match version with
-    | v when v < (5, 2, 0, None) -> "omod_cu_pre_520"
-    | _ -> "omod_cu_geq_520"
-    in
-    let scope_dir = B0_build.scope_dir b in
-    let file = Fpath.(scope_dir / "src" / "support" / dir / "omod_cu.ml") in
-    B0_memo.ready_file (B0_build.memo b) file;
-    Fut.return (Fpath.Set.singleton file)
+  let open Fut.Syntax in
+  let* version = B0_ocaml.Conf.version' b in
+  let dir = match version with
+  | v when v < (5, 2, 0, None) -> "omod_cu_pre_520"
+  | _ -> "omod_cu_geq_520"
   in
+  let scope_dir = B0_build.scope_dir b in
+    let file = Fpath.(scope_dir / "src" / "support" / dir / "omod_cu.ml") in
+  B0_memo.ready_file (B0_build.memo b) file;
+  Fut.return (Fpath.Set.singleton file)
+
+let omod_support_lib =
   let doc = "The omod.support library" in
   let srcs = [
     `Dir ~/"src/support";
     `Fut ocaml_cond;
     `X ~/"src/support/omod_cu.ml"; (* Remove when we rid of topkg *)];
   in
-  let requires = [omod; unix; compiler_libs_common] in
+  let requires = [omod; unix; compiler_libs_common;] in
   B0_ocaml.lib omod_support ~srcs ~doc ~requires
 
 (* Omod tool *)
 
 let omod_tool =
   let doc = "The omod support tool" in
-  let srcs = Fpath.[`File (v "src/omod_bin.ml")] in
-  let requires = [cmdliner; omod; omod_support] in
+  let srcs = [`File ~/"src/omod_bin.ml";]
+  in
+  let requires = [cmdliner; unix;
+                  compiler_libs_native_toplevel;
+                  compiler_libs_toplevel;
+                  omod; omod_support]
+  in
   B0_ocaml.exe "omod" ~public:true ~srcs ~doc ~requires
 
 let default =
