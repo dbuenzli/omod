@@ -1,3 +1,5 @@
+v0.0.4 2024-03-29 La Forclaz (VS)
+---------------------------------
 
 - Require and support OCaml >= 4.14.0. 
 - Stop using Toploop.directive_table, this means 
