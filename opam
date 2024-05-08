@@ -28,6 +28,6 @@ build: [
 ]
 install: [
   ["install" "-d" "%{lib}%/ocaml/"]
-  ["install" "src/omod.top" "src/omod.nattop" "%{lib}%/ocaml/"]
+  ["install" "src/omod.top" "%{lib}%/ocaml/"]
 ]
 dev-repo: "git+https://erratique.ch/repos/omod.git"

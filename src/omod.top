@@ -4,7 +4,10 @@
   ---------------------------------------------------------------------------*)
 
 #directory "%%LIBDIR%%/omod";;
-#load "omod.cma";;
+
+let () =
+  let omod = if Sys.backend_type = Native then "omod.cmxs" else "omod.cma" in
+  Topdirs.dir_load Format.err_formatter omod
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2018 The omod programmers

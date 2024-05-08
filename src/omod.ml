@@ -183,8 +183,13 @@ module Cmd = struct
     | Ok _ as v -> v
 end
 
-(* Toplevel implementation. To be plugged by the native or bytecode
-   Topdirs implementation. *)
+(* Toplevel implementation.
+
+   The toplevel implementation is plugged by Omod_top when the library
+   is loaded in the toplevel. This allows the omod binary to use this
+   API without linking against the toploop library. This used to be
+   necessary for handling the separate ocaml and ocamlnat APIs.
+   But nowadays we could like organize de code to avoid it. *)
 
 module Top = struct
 
@@ -204,8 +209,8 @@ module Top = struct
   end
 
   let topdirs : (module TOPDIRS) ref = ref (module Nil : TOPDIRS)
-  let is_nat : bool ref = ref false
-  let set_topdirs ~is_nat:b t = topdirs := t; is_nat := b
+  let is_nat = Sys.backend_type = Native
+  let set_topdirs t = topdirs := t
 
   let symtable_exn_to_string exn =
     (* Pattern match over Symtable.Error and Symtable.exception type
@@ -271,8 +276,6 @@ module Top = struct
   let load_obj obj =
     let module Topdirs = (val !topdirs : TOPDIRS) in
     (handle_toploop_api Topdirs.dir_load obj) |> handle_err "load" obj
-
-  let is_nat () = !is_nat
 end
 
 (* Formatting *)
@@ -411,7 +414,7 @@ let omod_load_seqs ~silent mods =
   let add_if c arg acc = if c then arg :: acc else acc in
   let cmd =
     "omod" :: "load" :: "--force" ::
-    (add_if (Top.is_nat ()) "--nat" @@ add_if silent "--quiet" @@ mods)
+    (add_if Top.is_nat "--nat" @@ add_if silent "--quiet" @@ mods)
   in
   match Cmd.read cmd with Error (_, e) -> Error e | Ok v -> parse_loads v
 

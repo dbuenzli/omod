@@ -231,8 +231,8 @@ module Private : sig
     val load_obj : string -> (unit, string) result
     (** [load_obj obj] loads the object file [obj]. *)
 
-    val is_nat : unit -> bool
-    (** [is_nat ()] is [true] if the current toplevel implementation
+    val is_nat : bool
+    (** [is_nat is [true] if the current toplevel implementation
         is [ocamlnat]. *)
 
     (** {1:topdirimpl Topdirs implementations} *)
@@ -245,9 +245,8 @@ module Private : sig
       val dir_load : Format.formatter -> string -> unit
     end
 
-    val set_topdirs : is_nat:bool -> (module TOPDIRS) -> unit
-    (** [set_topdirs ~is_nat t] sets the topdirs implementation to [t]
-        and indicates with [is_nat] if this [ocamlnat]'s implementation. *)
+    val set_topdirs : (module TOPDIRS) -> unit
+    (** [set_topdirs t] sets the topdirs implementation to [t] *)
   end
 end
 
@@ -269,13 +268,12 @@ end
        but does resolve to a compiled interface, the dependency
        is assumed to be a mli-only compilation unit and the directory
        of the compiled interface is added to the includes (if [incs] is true).}
-    {- The initialization performed by [omod.top] and [omod.nattop]
+    {- The initialization performed by [omod.top]
        {{!assume_load}assume} (with [incs:false] and [init:false])
        the following modules:
        {ul
        {- [utop.UTop] if [omod.top] is [#use]d in [utop]. }
-       {- [ocaml.Toploop] if [omod.top] is [#use]d (not in [utop]).}
-       {- [ocaml.Opttoploop] if [omod.nattop] is [#use]d. .}}}
+       {- [ocaml.Toploop] if [omod.top] is [#use]d (not in [utop]).}}
     {- Load sequences with [vmthread] variants and objects
        of the form [m.p.ext] (profiling versions in the stdlib)
        are excluded from load sequence results. This reduces the load

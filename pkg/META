@@ -1,22 +1,11 @@
 description = "Lookup and load installed OCaml modules"
 version = "%%VERSION_NUM%%"
-requires = ""
+requires = "" # No compiler libs here is important.
 archive(byte) = "omod.cma"
 archive(native) = "omod.cmxa"
 plugin(byte) = "omod.cma"
 plugin(native) = "omod.cmxs"
 exists_if = "omod.cma omod.cmxa"
-
-package "nattop" (
- version = "%%VERSION_NUM%%"
- description = "Omod ocamlnat support"
- requires = ""
- archive(byte) = "omod_nattop.cma"
- archive(native) = "omod_nattop.cmxa"
- plugin(byte) = "omod_nattop.cma"
- plugin(native) = "omod_nattop.cmxs"
- exists_if = "omod_nattop.cma omod_nattop.cmxa"
-)
 
 package "support" (
   directory = "support"

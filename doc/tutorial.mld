@@ -6,19 +6,6 @@ in your scope: type or add the following line to your
 
 {v #use "omod.top" v}
 
-If you are using [ocamlnat] you
-{{:https://caml.inria.fr/mantis/view.php?id=7589}unfortunately} need to
-[#use] another file:
-
-{v #use "omod.nattop" v}
-
-It is also likely that [opam]'s initialization bits in [.ocamlinit] to
-find the file to [#use] won't work. So you need to invoke [ocamlnat]
-with [-noinit] and indicate where the file to [#use] can be found. The
-following invocation should work:
-
-{v rlwrap ocamlnat -I $OCAML_TOPLEVEL_PATH -noinit v}
-
 Now whenever you want to use a module named [M] invoke:
 
 {[# Omod.load "M"]}

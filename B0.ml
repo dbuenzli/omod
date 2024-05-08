@@ -4,14 +4,11 @@ open Result.Syntax
 (* OCaml libraries *)
 
 let omod = B0_ocaml.libname "omod"
-let omod_nattop = B0_ocaml.libname "omod.nattop"
 let omod_support = B0_ocaml.libname "omod.support"
 
 let cmdliner = B0_ocaml.libname "cmdliner"
 let compiler_libs_common = B0_ocaml.libname "compiler-libs.common"
 let compiler_libs_toplevel = B0_ocaml.libname "compiler-libs.toplevel"
-let compiler_libs_native_toplevel =
-  B0_ocaml.libname "compiler-libs.native-toplevel"
 
 let unix = B0_ocaml.libname "unix"
 
@@ -24,16 +21,10 @@ let omod_lib =
   let requires = [compiler_libs_toplevel] in
   B0_ocaml.lib ~name:"omod-lib" omod ~requires ~srcs ~doc
 
-let omod_lib_nat = (* Not added to the default pack for now *)
-  let doc = "The omod library for ocamlnat" in
-  let srcs = `File ~/"src/omod_nattop.ml" :: omod_srcs in
-  let requires = [compiler_libs_toplevel] in
-  B0_ocaml.lib ~name:"omod-nat-lib" omod_nattop ~requires ~srcs ~doc
-
 let ocaml_cond b =
   (* TODO for this to work we need a corresponding mli (whatever
-       the content) in the directories with the
-       implementation. See https://github.com/ocaml/ocaml/issues/9717 *)
+     the content) in the directories with the
+     implementation. See https://github.com/ocaml/ocaml/issues/9717 *)
   let open Fut.Syntax in
   let* version = B0_ocaml.Conf.version' b in
   let dir = match version with
@@ -62,7 +53,6 @@ let omod_tool =
   let srcs = [`File ~/"src/omod_bin.ml";]
   in
   let requires = [cmdliner; unix;
-                  compiler_libs_native_toplevel;
                   compiler_libs_toplevel;
                   omod; omod_support]
   in
@@ -93,7 +83,7 @@ let default =
       # Following is only to deal with
       # https://caml.inria.fr/mantis/view.php?id=7808
       [["install" "-d" "%{lib}%/ocaml/"]
-       ["install" "src/omod.top" "src/omod.nattop" "%{lib}%/ocaml/"]]|}
+       ["install" "src/omod.top" "%{lib}%/ocaml/"]]|}
     |> B0_meta.tag B0_opam.tag
     |> B0_meta.tag B0_release.tag
   in
