@@ -4,9 +4,9 @@
   ---------------------------------------------------------------------------*)
 
 let init () =
-  Omod.Private.Top.set_topdirs ~is_nat:true (module Opttopdirs);
+  Omod.Private.Top.set_topdirs ~is_nat:true (module Topdirs);
   Omod.Private.announce ();
-  let base = "ocaml.Opttoploop" in
+  let base = "ocaml.Toploop" in
   ignore @@
   Omod.assume_load ~batch:true ~silent:`Loads ~init:false ~incs:false base
 
