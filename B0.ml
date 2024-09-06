@@ -8,7 +8,7 @@ let omod_support = B0_ocaml.libname "omod.support"
 
 let cmdliner = B0_ocaml.libname "cmdliner"
 let compiler_libs_common = B0_ocaml.libname "compiler-libs.common"
-let compiler_libs_toplevel = B0_ocaml.libname "compiler-libs.toplevel"
+(* let compiler_libs_toplevel = B0_ocaml.libname "compiler-libs.toplevel" *)
 
 let unix = B0_ocaml.libname "unix"
 
@@ -18,7 +18,7 @@ let omod_srcs = [`File ~/"src/omod.mli"; `File ~/"src/omod.ml" ]
 let omod_lib =
   let doc = "The omod library" in
   let srcs = `File ~/"src/omod_top.ml" :: omod_srcs in
-  let requires = [compiler_libs_toplevel] in
+  let requires = [compiler_libs_common] in
   B0_ocaml.lib ~name:"omod-lib" omod ~requires ~srcs ~doc
 
 let ocaml_cond b =
@@ -53,7 +53,7 @@ let omod_tool =
   let srcs = [`File ~/"src/omod_bin.ml";]
   in
   let requires = [cmdliner; unix;
-                  compiler_libs_toplevel;
+                  compiler_libs_common;
                   omod; omod_support]
   in
   B0_ocaml.exe "omod" ~public:true ~srcs ~doc ~requires
