@@ -1,4 +1,6 @@
 
+- Support for OCaml 5.5.0 (#16). Thanks to David Allsopp for the
+  report.
 
 - Restore (and improve) support for `ocamlnat`.  It's now possible to
   use `#use "omod.top"` regardless. So if you don't have fancy stuff

@@ -192,7 +192,23 @@ module Cma = struct
     let custom = l.Cmo_format.lib_custom in
     let custom_cobjs = l.Cmo_format.lib_ccobjs in
     let custom_copts = l.Cmo_format.lib_ccopts in
-    let dllibs = l.Cmo_format.lib_dllibs in
+    let dllibs =
+      match l.Cmo_format.lib_dllibs with
+      | [] -> []
+      | lib :: _ ->
+          if Obj.tag (Obj.repr lib) = Obj.string_tag then
+            (Obj.magic (l.Cmo_format.lib_dllibs) : string list)
+          else
+            (* A possible workaround for the extra field with Relocatable OCaml.
+               An alternative might be
+                 let demangle (~suffixed, file)
+                   if suffixed then
+                     Misc.RuntimeID.stubslib file
+                   else
+                     file
+               except that omod doesn't use these fields anyway *)
+            List.map snd (Obj.magic l.Cmo_format.lib_dllibs : (_ * string) list)
+    in
     { name; cmos; custom; custom_cobjs; custom_copts; dllibs }
 
   let cma_of_in_channel ic fpath =
