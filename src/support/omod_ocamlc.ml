@@ -286,11 +286,13 @@ module Cmxs = struct
     { name }
 
   let read cmxa =
-    let exists = try Sys.file_exists cmxa with
-    | Sys_error e -> false
+    let exists = try Ok (Sys.file_exists cmxa) with
+    | Sys_error e -> Error e
     in
-    if exists then Ok (of_library cmxa ()) else
-    error_msgf "%s: No such file." cmxa
+    match exists with
+    | Error _ as e -> e
+    | Ok true -> Ok (of_library cmxa ())
+    | Ok false -> error_msgf "%s: No such file" cmxa
 
   let name cmxs = cmxs.name
 end
