@@ -31,3 +31,4 @@ install: [
   ["install" "src/omod.top" "%{lib}%/ocaml/"]
 ]
 dev-repo: "git+https://erratique.ch/repos/omod.git"
+x-maintenance-intent: ["(latest)"]
