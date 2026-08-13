@@ -32,9 +32,9 @@ let ocaml_cond b =
   | _ -> "omod_cu_geq_520"
   in
   let scope_dir = B0_build.scope_dir b in
-    let file = Fpath.(scope_dir / "src" / "support" / dir / "omod_cu.ml") in
+    let file = Filepath.(scope_dir / "src" / "support" / dir / "omod_cu.ml") in
   B0_memo.ready_file (B0_build.memo b) file;
-  Fut.return (Fpath.Set.singleton file)
+  Fut.return (Filepath.Set.singleton file)
 
 let omod_support_lib =
   let doc = "The omod.support library" in
